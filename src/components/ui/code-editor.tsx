@@ -19,6 +19,7 @@ import { LANGUAGE_OPTIONS } from "@/lib/languages";
 export type CodeEditorRootProps = {
   defaultCode?: string;
   onCodeChange?: (code: string) => void;
+  maxLength?: number;
   className?: string;
 };
 
@@ -29,6 +30,7 @@ export type CodeEditorRootProps = {
 export function CodeEditorRoot({
   defaultCode = "",
   onCodeChange,
+  maxLength = 5000,
   className,
 }: CodeEditorRootProps) {
   const [code, setCode] = useState(defaultCode);
@@ -124,6 +126,7 @@ export function CodeEditorRoot({
         code={code}
         highlightedHtml={highlightedHtml}
         onCodeChange={handleCodeChange}
+        maxLength={maxLength}
       />
     </div>
   );
@@ -201,12 +204,14 @@ type CodeEditorBodyProps = ComponentProps<"div"> & {
   code: string;
   highlightedHtml: string;
   onCodeChange: (code: string) => void;
+  maxLength: number;
 };
 
 export function CodeEditorBody({
   code,
   highlightedHtml,
   onCodeChange,
+  maxLength,
   className,
   ...props
 }: CodeEditorBodyProps) {
@@ -216,6 +221,8 @@ export function CodeEditorBody({
 
   const lineCount = code ? code.split("\n").length : 1;
   const lineNumbers = Array.from({ length: lineCount }, (_, i) => i + 1);
+  const charCount = code.length;
+  const isOverLimit = charCount > maxLength;
 
   // Sync scroll between textarea, overlay, and gutter
   const handleScroll = useCallback(() => {
@@ -231,54 +238,68 @@ export function CodeEditorBody({
   }, []);
 
   return (
-    <div className={twMerge("flex h-96", className)} {...props}>
-      {/* Gutter */}
-      <div
-        ref={gutterRef}
-        aria-hidden="true"
-        className="flex flex-col w-12 shrink-0 bg-bg-surface border-r border-border-primary px-3 py-4 overflow-hidden"
-      >
-        {lineNumbers.map((n) => (
-          <span
-            key={n}
-            className="font-secondary text-xs text-text-tertiary leading-relaxed text-right block"
-          >
-            {n}
-          </span>
-        ))}
+    <div className={twMerge("flex flex-col", className)} {...props}>
+      <div className="flex h-96">
+        {/* Gutter */}
+        <div
+          ref={gutterRef}
+          aria-hidden="true"
+          className="flex flex-col w-12 shrink-0 bg-bg-surface border-r border-border-primary px-3 py-4 overflow-hidden"
+        >
+          {lineNumbers.map((n) => (
+            <span
+              key={n}
+              className="font-secondary text-xs text-text-tertiary leading-relaxed text-right block"
+            >
+              {n}
+            </span>
+          ))}
+        </div>
+
+        {/* Editor area: textarea on top of highlighted overlay */}
+        <div className="relative flex-1 overflow-hidden">
+          {/* Highlighted code overlay */}
+          <pre
+            ref={overlayRef}
+            aria-hidden="true"
+            data-code-overlay
+            // biome-ignore lint/security/noDangerouslySetInnerHtml: shiki output is safe
+            dangerouslySetInnerHTML={{ __html: highlightedHtml }}
+            className="absolute inset-0 font-secondary text-xs p-4 m-0 overflow-hidden pointer-events-none whitespace-pre [&>pre]:m-0 [&>pre]:p-0 [&>pre]:bg-transparent! [&>pre]:font-secondary [&>pre]:text-xs [&>pre>code]:font-secondary [&>pre>code]:text-xs [&>pre>code]:block"
+            style={{ lineHeight: "1.625" }}
+          />
+
+          {/* Editable textarea — transparent text, visible caret */}
+          <textarea
+            ref={textareaRef}
+            value={code}
+            onChange={(e) => onCodeChange(e.target.value)}
+            onScroll={handleScroll}
+            className="absolute inset-0 w-full h-full bg-transparent font-secondary text-xs p-4 resize-none outline-none text-transparent caret-text-primary z-10 whitespace-pre"
+            style={{
+              lineHeight: "1.625",
+              caretColor: "var(--color-text-primary)",
+            }}
+            spellCheck={false}
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            aria-label="Code input"
+            aria-multiline="true"
+          />
+        </div>
       </div>
 
-      {/* Editor area: textarea on top of highlighted overlay */}
-      <div className="relative flex-1 overflow-hidden">
-        {/* Highlighted code overlay */}
-        <pre
-          ref={overlayRef}
-          aria-hidden="true"
-          data-code-overlay
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: shiki output is safe
-          dangerouslySetInnerHTML={{ __html: highlightedHtml }}
-          className="absolute inset-0 font-secondary text-xs p-4 m-0 overflow-hidden pointer-events-none whitespace-pre [&>pre]:m-0 [&>pre]:p-0 [&>pre]:bg-transparent! [&>pre]:font-secondary [&>pre]:text-xs [&>pre>code]:font-secondary [&>pre>code]:text-xs [&>pre>code]:block"
-          style={{ lineHeight: "1.625" }}
-        />
-
-        {/* Editable textarea — transparent text, visible caret */}
-        <textarea
-          ref={textareaRef}
-          value={code}
-          onChange={(e) => onCodeChange(e.target.value)}
-          onScroll={handleScroll}
-          className="absolute inset-0 w-full h-full bg-transparent font-secondary text-xs p-4 resize-none outline-none text-transparent caret-text-primary z-10 whitespace-pre"
-          style={{
-            lineHeight: "1.625",
-            caretColor: "var(--color-text-primary)",
-          }}
-          spellCheck={false}
-          autoComplete="off"
-          autoCorrect="off"
-          autoCapitalize="off"
-          aria-label="Code input"
-          aria-multiline="true"
-        />
+      {/* Character counter */}
+      <div className="flex justify-end px-3 py-1.5 border-t border-border-primary">
+        <span
+          className={twMerge(
+            "font-secondary text-xs tabular-nums",
+            isOverLimit ? "text-accent-red" : "text-text-tertiary"
+          )}
+        >
+          {charCount}/{maxLength}
+        </span>
       </div>
     </div>
   );

@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/leaderboard-table";
 import { Toggle } from "@/components/ui/toggle";
 
+const MAX_CODE_LENGTH = 2000;
+
 const PLACEHOLDER_CODE = `function calculateTotal(items) {
   var total = 0;
   for (var i = 0; i < items.length; i++) {
@@ -67,6 +69,7 @@ const ROWS: LeaderboardRow[] = [
 
 export default function HomePage() {
   const [code, setCode] = useState(PLACEHOLDER_CODE);
+  const isOverLimit = code.length > MAX_CODE_LENGTH;
 
   return (
     <main className="min-h-screen bg-bg-page">
@@ -89,7 +92,11 @@ export default function HomePage() {
         </div>
 
         {/* ── Code Editor ──────────────────────────────────── */}
-        <CodeEditorRoot defaultCode={PLACEHOLDER_CODE} onCodeChange={setCode} />
+        <CodeEditorRoot
+          defaultCode={PLACEHOLDER_CODE}
+          onCodeChange={setCode}
+          maxLength={MAX_CODE_LENGTH}
+        />
 
         {/* ── Actions Bar ──────────────────────────────────── */}
         <div className="flex items-center justify-between w-full">
@@ -99,7 +106,11 @@ export default function HomePage() {
               {"// maximum sarcasm enabled"}
             </span>
           </div>
-          <Button variant="primary" size="md" disabled={!code.trim()}>
+          <Button
+            variant="primary"
+            size="md"
+            disabled={!code.trim() || isOverLimit}
+          >
             $ roast_my_code
           </Button>
         </div>
