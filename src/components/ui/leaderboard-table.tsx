@@ -129,7 +129,7 @@ export function LeaderboardTableRow({
           <span
             key={line}
             className={twMerge(
-              "font-mono text-xs",
+              "font-secondary text-xs",
               line.startsWith("//") || line.startsWith("--")
                 ? "text-text-tertiary"
                 : "text-text-primary"
