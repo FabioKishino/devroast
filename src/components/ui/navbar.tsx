@@ -12,7 +12,7 @@ export function Navbar({ ...props }: ComponentProps<"header">) {
         <span className="font-mono text-xl font-bold text-accent-green leading-none">
           {">"}
         </span>
-        <span className="font-mono text-lg font-medium text-text-primary leading-none">
+        <span className="font-secondary text-lg font-medium text-text-primary leading-none">
           devroast
         </span>
       </Link>
@@ -21,7 +21,7 @@ export function Navbar({ ...props }: ComponentProps<"header">) {
       <nav className="flex items-center gap-6">
         <Link
           href="/leaderboard"
-          className="font-mono text-sm text-text-secondary hover:text-text-primary transition-colors"
+          className="font-secondary text-sm text-text-secondary hover:text-text-primary transition-colors"
         >
           leaderboard
         </Link>

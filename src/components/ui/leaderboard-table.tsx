@@ -26,16 +26,16 @@ export function LeaderboardTableHeader({
     <div className={twMerge("flex flex-col gap-3", className)} {...props}>
       <div className="flex items-center justify-between w-full">
         <div className="flex items-center gap-2">
-          <span className="font-mono text-sm font-bold text-accent-green">
+          <span className="font-secondary text-sm font-bold text-accent-green">
             {"//"}
           </span>
-          <span className="font-mono text-sm font-bold text-text-primary">
+          <span className="font-secondary text-sm font-bold text-text-primary">
             shame_leaderboard
           </span>
         </div>
         <Link
           href="/leaderboard"
-          className="flex items-center font-mono text-xs text-text-secondary hover:text-text-primary transition-colors border border-border-primary px-3 py-1.5"
+          className="flex items-center font-secondary text-xs text-text-secondary hover:text-text-primary transition-colors border border-border-primary px-3 py-1.5"
         >
           {"$ view_all >>"}
         </Link>
@@ -61,16 +61,16 @@ export function LeaderboardTableGrid({
     >
       {/* Column headers */}
       <div className="flex items-center h-10 px-5 bg-bg-surface border-b border-border-primary">
-        <span className="font-mono text-xs font-medium text-text-tertiary w-12 shrink-0">
+        <span className="font-secondary text-xs font-medium text-text-tertiary w-12 shrink-0">
           #
         </span>
-        <span className="font-mono text-xs font-medium text-text-tertiary w-16 shrink-0">
+        <span className="font-secondary text-xs font-medium text-text-tertiary w-16 shrink-0">
           score
         </span>
-        <span className="font-mono text-xs font-medium text-text-tertiary flex-1">
+        <span className="font-secondary text-xs font-medium text-text-tertiary flex-1">
           code
         </span>
-        <span className="font-mono text-xs font-medium text-text-tertiary w-24 shrink-0 text-right">
+        <span className="font-secondary text-xs font-medium text-text-tertiary w-24 shrink-0 text-right">
           lang
         </span>
       </div>
@@ -113,12 +113,12 @@ export function LeaderboardTableRow({
       )}
       {...props}
     >
-      <span className="font-mono text-xs text-text-secondary w-12 shrink-0 pt-0.5">
+      <span className="font-secondary text-xs text-text-secondary w-12 shrink-0 pt-0.5">
         {rank}
       </span>
       <span
         className={twMerge(
-          "font-mono text-xs font-bold w-16 shrink-0 pt-0.5",
+          "font-secondary text-xs font-bold w-16 shrink-0 pt-0.5",
           scoreColorClass(score)
         )}
       >
@@ -139,7 +139,7 @@ export function LeaderboardTableRow({
           </span>
         ))}
       </div>
-      <span className="font-mono text-xs text-text-secondary w-24 shrink-0 text-right pt-0.5">
+      <span className="font-secondary text-xs text-text-secondary w-24 shrink-0 text-right pt-0.5">
         {language}
       </span>
     </div>

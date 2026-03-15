@@ -67,16 +67,18 @@ export function LeaderboardEntryMeta({
       {/* Left: rank + score */}
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-1.5">
-          <span className="font-mono text-xs text-text-tertiary">#</span>
-          <span className="font-mono text-sm font-bold text-accent-amber">
+          <span className="font-secondary text-xs text-text-tertiary">#</span>
+          <span className="font-secondary text-sm font-bold text-accent-amber">
             {rank}
           </span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="font-mono text-xs text-text-tertiary">score:</span>
+          <span className="font-secondary text-xs text-text-tertiary">
+            score:
+          </span>
           <span
             className={twMerge(
-              "font-mono text-sm font-bold",
+              "font-secondary text-sm font-bold",
               scoreColorClass(score)
             )}
           >
@@ -87,10 +89,10 @@ export function LeaderboardEntryMeta({
 
       {/* Right: language + line count */}
       <div className="flex items-center gap-3">
-        <span className="font-mono text-xs text-text-secondary">
+        <span className="font-secondary text-xs text-text-secondary">
           {language}
         </span>
-        <span className="font-mono text-xs text-text-tertiary">
+        <span className="font-secondary text-xs text-text-tertiary">
           {linesCount} {linesCount === 1 ? "line" : "lines"}
         </span>
       </div>
