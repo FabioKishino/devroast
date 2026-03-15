@@ -61,7 +61,7 @@ const AVG_SCORE = 4.2;
 
 export default function LeaderboardPage() {
   return (
-    <main className="flex flex-col w-full max-w-[1440px] mx-auto px-20 py-10 gap-10">
+    <main className="flex flex-col w-full max-w-360 mx-auto px-20 py-10 gap-10">
       {/* Hero section */}
       <section className="flex flex-col gap-4">
         <div className="flex flex-col gap-4">
@@ -103,11 +103,11 @@ export default function LeaderboardPage() {
               language={entry.language}
               linesCount={entry.linesCount}
             />
-            <div className="h-[120px] bg-bg-input overflow-hidden">
+            <div className="h-30 bg-bg-input overflow-hidden">
               <CodeBlock
                 code={entry.code}
                 lang={entry.language}
-                className="h-full [&>pre]:!p-4 [&>pre]:h-full [&>pre]:overflow-hidden"
+                className="h-full [&>pre]:p-4! [&>pre]:h-full [&>pre]:overflow-hidden"
               />
             </div>
           </LeaderboardEntryRoot>
