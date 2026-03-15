@@ -8,6 +8,7 @@ import {
   useState,
 } from "react";
 import { twMerge } from "tailwind-merge";
+import { CodeBlockHeader } from "@/components/ui/code-block";
 import { ensureLanguage, getHighlighter } from "@/lib/highlighter";
 import { detectLanguage } from "@/lib/language-detect";
 import { LANGUAGE_OPTIONS } from "@/lib/languages";
@@ -164,36 +165,23 @@ export function CodeEditorHeader({
       ? "Auto-detect"
       : `Auto-detect (${LANGUAGE_OPTIONS.find((l) => l.value === detectedLanguage)?.label ?? detectedLanguage})`;
 
-  return (
-    <div
-      className={twMerge(
-        "flex items-center justify-between h-10 px-4 border-b border-border-primary shrink-0",
-        className
-      )}
+  const languageSelect = (
+    <select
+      value={selectedLanguage ?? ""}
+      onChange={handleSelectChange}
+      className="bg-bg-elevated border border-border-primary text-text-secondary font-mono text-xs px-2 py-1 outline-none cursor-pointer hover:border-border-focus transition-colors"
+      aria-label="Select language"
     >
-      {/* Traffic light dots */}
-      <div className="flex items-center gap-2">
-        <span className="size-3 rounded-full bg-accent-red" />
-        <span className="size-3 rounded-full bg-accent-amber" />
-        <span className="size-3 rounded-full bg-accent-green" />
-      </div>
-
-      {/* Language selector */}
-      <select
-        value={selectedLanguage ?? ""}
-        onChange={handleSelectChange}
-        className="bg-bg-elevated border border-border-primary text-text-secondary font-mono text-xs px-2 py-1 outline-none cursor-pointer hover:border-border-focus transition-colors"
-        aria-label="Select language"
-      >
-        <option value="">{autoLabel}</option>
-        {LANGUAGE_OPTIONS.filter((l) => l.value !== null).map((l) => (
-          <option key={l.value} value={l.value ?? ""}>
-            {l.label}
-          </option>
-        ))}
-      </select>
-    </div>
+      <option value="">{autoLabel}</option>
+      {LANGUAGE_OPTIONS.filter((l) => l.value !== null).map((l) => (
+        <option key={l.value} value={l.value ?? ""}>
+          {l.label}
+        </option>
+      ))}
+    </select>
   );
+
+  return <CodeBlockHeader className={className} right={languageSelect} />;
 }
 
 // ---------------------------------------------------------------------------

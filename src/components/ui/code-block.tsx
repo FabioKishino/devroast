@@ -1,4 +1,46 @@
+import type { ComponentProps } from "react";
 import { codeToHtml } from "shiki";
+import { twMerge } from "tailwind-merge";
+
+// ── Header ────────────────────────────────────────────────────────────────────
+
+type CodeBlockHeaderProps = Omit<ComponentProps<"div">, "children"> & {
+  filename?: string;
+  right?: React.ReactNode;
+};
+
+export function CodeBlockHeader({
+  filename,
+  right,
+  className,
+  ...props
+}: CodeBlockHeaderProps) {
+  return (
+    <div
+      className={twMerge(
+        "flex items-center justify-between h-10 px-4 border-b border-border-primary shrink-0",
+        className
+      )}
+      {...props}
+    >
+      {/* Traffic light dots */}
+      <div className="flex items-center gap-2">
+        <span className="size-3 rounded-full bg-accent-red" />
+        <span className="size-3 rounded-full bg-accent-amber" />
+        <span className="size-3 rounded-full bg-accent-green" />
+        {filename && (
+          <span className="font-mono text-xs text-text-tertiary ml-2">
+            {filename}
+          </span>
+        )}
+      </div>
+
+      {right && <div className="flex items-center">{right}</div>}
+    </div>
+  );
+}
+
+// ── Block ─────────────────────────────────────────────────────────────────────
 
 type CodeBlockProps = {
   code: string;
@@ -18,13 +60,13 @@ export async function CodeBlock({
 
   return (
     <div
-      className={[
-        "overflow-x-auto rounded-lg font-mono text-sm",
+      className={twMerge(
+        "font-mono text-sm",
+        "[&>pre]:overflow-x-auto [&>pre]:scrollbar-thin",
         "[&>pre]:p-4",
-        className ?? "",
-      ]
-        .join(" ")
-        .trim()}
+        "[&>pre]:![background:transparent]",
+        className
+      )}
       // biome-ignore lint/security/noDangerouslySetInnerHtml: shiki output is safe
       dangerouslySetInnerHTML={{ __html: html }}
     />

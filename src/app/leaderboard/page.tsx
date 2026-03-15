@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
+import { CodeBlock } from "@/components/ui/code-block";
 import {
-  LeaderboardEntryCode,
   type LeaderboardEntryData,
   LeaderboardEntryMeta,
   LeaderboardEntryRoot,
@@ -22,47 +22,35 @@ const ENTRIES: LeaderboardEntryData[] = [
     score: 1.2,
     language: "javascript",
     linesCount: 3,
-    codeLines: [
-      'eval(prompt("enter code"))',
-      "document.write(response)",
-      "// trust the user lol",
-    ],
+    code: 'eval(prompt("enter code"))\ndocument.write(response)\n// trust the user lol',
   },
   {
     rank: 2,
     score: 1.8,
     language: "javascript",
     linesCount: 3,
-    codeLines: [
-      "if (x == true) { return true; }",
-      "else if (x == false) { return false; }",
-      "else { return !false; }",
-    ],
+    code: "if (x == true) { return true; }\nelse if (x == false) { return false; }\nelse { return !false; }",
   },
   {
     rank: 3,
     score: 2.1,
     language: "sql",
     linesCount: 2,
-    codeLines: ["SELECT * FROM users WHERE 1=1", "-- TODO: add authentication"],
+    code: "SELECT * FROM users WHERE 1=1\n-- TODO: add authentication",
   },
   {
     rank: 4,
     score: 2.3,
     language: "java",
     linesCount: 3,
-    codeLines: ["catch (e) {", "  // ignore", "}"],
+    code: "catch (e) {\n  // ignore\n}",
   },
   {
     rank: 5,
     score: 2.5,
     language: "javascript",
     linesCount: 3,
-    codeLines: [
-      "const sleep = (ms) =>",
-      "  new Date(Date.now() + ms)",
-      "  while(new Date() < end) {}",
-    ],
+    code: "const sleep = (ms) =>\n  new Date(Date.now() + ms)\n  while(new Date() < end) {}",
   },
 ];
 
@@ -82,7 +70,7 @@ export default function LeaderboardPage() {
             <span className="font-mono text-3xl font-bold text-accent-green">
               {">"}
             </span>
-            <h1 className="font-secondary text-3xl font-bold text-text-primary">
+            <h1 className="font-mono text-3xl font-bold text-text-primary">
               shame_leaderboard
             </h1>
           </div>
@@ -115,7 +103,13 @@ export default function LeaderboardPage() {
               language={entry.language}
               linesCount={entry.linesCount}
             />
-            <LeaderboardEntryCode codeLines={entry.codeLines} />
+            <div className="h-[120px] bg-bg-input overflow-hidden">
+              <CodeBlock
+                code={entry.code}
+                lang={entry.language}
+                className="h-full [&>pre]:!p-4 [&>pre]:h-full [&>pre]:overflow-hidden"
+              />
+            </div>
           </LeaderboardEntryRoot>
         ))}
       </section>
