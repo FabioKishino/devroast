@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { CodeEditorRoot } from "@/components/ui/code-editor";
 import {
   LeaderboardTableFooter,
   LeaderboardTableGrid,
@@ -27,8 +28,6 @@ const PLACEHOLDER_CODE = `function calculateTotal(items) {
 
   return total;
 }`;
-
-const LINE_COUNT = 16;
 
 type LeaderboardRow = {
   rank: number;
@@ -69,18 +68,16 @@ const ROWS: LeaderboardRow[] = [
 export default function HomePage() {
   const [code, setCode] = useState(PLACEHOLDER_CODE);
 
-  const lineNumbers = Array.from({ length: LINE_COUNT }, (_, i) => i + 1);
-
   return (
     <main className="min-h-screen bg-bg-page">
-      <div className="max-w-5xl mx-auto px-10 pt-20 pb-16 flex flex-col gap-8">
+      <div className="max-w-3xl mx-auto px-10 pt-20 pb-16 flex flex-col gap-8">
         {/* ── Hero ─────────────────────────────────────────── */}
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col items-center gap-3 text-center">
           <div className="flex items-center gap-3">
             <span className="font-mono text-4xl font-bold text-accent-green leading-none">
               $
             </span>
-            <span className="font-mono text-4xl font-bold text-text-primary leading-none">
+            <span className="font-secondary text-4xl font-bold text-text-primary leading-none">
               paste your code. get roasted.
             </span>
           </div>
@@ -92,43 +89,10 @@ export default function HomePage() {
         </div>
 
         {/* ── Code Editor ──────────────────────────────────── */}
-        <div className="flex flex-col border border-border-primary bg-bg-input max-w-3xl w-full mx-auto">
-          {/* Window header */}
-          <div className="flex items-center h-10 px-4 border-b border-border-primary shrink-0">
-            <div className="flex items-center gap-2">
-              <span className="size-3 rounded-full bg-accent-red" />
-              <span className="size-3 rounded-full bg-accent-amber" />
-              <span className="size-3 rounded-full bg-accent-green" />
-            </div>
-          </div>
-
-          {/* Code area */}
-          <div className="flex h-96">
-            {/* Line numbers */}
-            <div className="flex flex-col gap-2 w-12 shrink-0 bg-bg-surface border-r border-border-primary px-3 py-4">
-              {lineNumbers.map((n) => (
-                <span
-                  key={n}
-                  className="font-mono text-xs text-text-tertiary leading-none text-right"
-                >
-                  {n}
-                </span>
-              ))}
-            </div>
-
-            {/* Textarea */}
-            <textarea
-              className="flex-1 bg-bg-input font-mono text-xs text-text-secondary p-4 resize-none outline-none leading-relaxed placeholder:text-text-tertiary"
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              spellCheck={false}
-              aria-label="Code input"
-            />
-          </div>
-        </div>
+        <CodeEditorRoot defaultCode={PLACEHOLDER_CODE} onCodeChange={setCode} />
 
         {/* ── Actions Bar ──────────────────────────────────── */}
-        <div className="flex items-center justify-between max-w-3xl w-full mx-auto">
+        <div className="flex items-center justify-between w-full">
           <div className="flex items-center gap-4">
             <Toggle label="roast mode" defaultPressed />
             <span className="font-secondary text-xs text-text-tertiary">
@@ -141,7 +105,7 @@ export default function HomePage() {
         </div>
 
         {/* ── Footer hint ──────────────────────────────────── */}
-        <div className="flex items-center justify-center gap-6 max-w-3xl w-full mx-auto">
+        <div className="flex items-center justify-center gap-6">
           <span className="font-secondary text-xs text-text-tertiary">
             2,847 codes roasted
           </span>

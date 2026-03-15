@@ -12,14 +12,10 @@
 
 ```
 src/
-  app/
+  app/                   # Pages and layouts (App Router)
     globals.css          # @theme tokens (colors + fonts)
-    layout.tsx           # Root layout — fonts + <Navbar />
-    page.tsx             # Homepage — editor, toggle, leaderboard preview
-    components/page.tsx  # UI component preview page
-  components/ui/
+  components/ui/         # All UI primitives and compound components
     AGENTS.md            # Component-level authoring rules (Rules 1–12)
-    *.tsx                # All UI primitives and compound components
 ```
 
 ## Global Rules

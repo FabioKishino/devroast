@@ -6,7 +6,9 @@
     ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
     "Segoe UI Symbol", "Noto Color Emoji";
   --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
-  --font-secondary: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  --font-secondary:
+    ui-monospace, Menlo, Monaco, "Cascadia Mono", "Segoe UI Mono", Consolas,
+    monospace;
 
   /* accent colors */
   --color-accent-green: #10b981;
@@ -31,4 +33,13 @@
   /* diff colors */
   --color-diff-added-bg: #0a1a0f;
   --color-diff-removed-bg: #1a0a0a;
+}
+
+/* Force Shiki-generated pre/code to match textarea metrics exactly */
+[data-code-overlay] .shiki,
+[data-code-overlay] .shiki code {
+  font-size: 0.75rem;
+  line-height: 1.625;
+  font-family: var(--font-secondary);
+  background: transparent;
 }
