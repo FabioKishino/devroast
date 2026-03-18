@@ -6,16 +6,22 @@
 
 - **Stack**: Next.js 16.1.6 · React 19 · TypeScript · Tailwind v4 · Biome 2.4.6
 - **Router**: App Router, `src/` directory
-- **Key libs**: `@base-ui/react` (interactive primitives) · `shiki` (syntax highlighting) · `tailwind-variants` · `tailwind-merge`
+- **Data layer**: tRPC · Drizzle ORM · Postgres (Docker)
+- **Key libs**: `@base-ui/react` (interactive primitives) · `shiki` (syntax highlighting) · `tailwind-variants` · `tailwind-merge` · `@number-flow/react` (animated numbers)
 
 ## Structure
 
 ```
 src/
   app/                   # Pages and layouts (App Router)
+    _components/         # Page-specific components (see src/app/_components/AGENTS.md)
     globals.css          # @theme tokens (colors + fonts)
   components/ui/         # All UI primitives and compound components
     AGENTS.md            # Component-level authoring rules (Rules 1–12)
+  trpc/                  # tRPC infrastructure
+    AGENTS.md            # tRPC patterns and server/client boundaries
+  db/                    # Drizzle ORM client and schema
+    AGENTS.md            # Database patterns and conventions
 ```
 
 ## Global Rules
