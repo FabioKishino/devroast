@@ -89,6 +89,7 @@ File: `src/app/leaderboard/page.tsx`
 
 - Keep `page.tsx` as an `async` Server Component and fetch via `import { caller } from "@/trpc/server"`.
 - Remove static mock arrays/constants used for entries and stats.
+- Remove the current fixed `ENTRIES` list (5 mock entries) completely.
 - Fetch page data server-side via:
   - `caller.leaderboard.topShame({ limit: 20 })`
   - `caller.leaderboard.stats()`
@@ -146,6 +147,7 @@ Functional verification:
 
 - `/leaderboard` is fully data-driven from tRPC/Drizzle.
 - Exactly top 20 worst scored submissions are requested (or fewer if unavailable).
+- `/leaderboard` must not be capped by any static frontend array length; rendered count must come from backend results with `limit: 20`.
 - Ranking/filter rules match agreed behavior.
 - Homepage behavior remains unchanged.
 - Checks pass (`npm run check` and `npm run build`).
