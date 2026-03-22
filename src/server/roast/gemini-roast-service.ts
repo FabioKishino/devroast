@@ -12,6 +12,22 @@ type BuildRoastPromptInput = {
 
 type AnalyzeCodeWithGeminiInput = BuildRoastPromptInput;
 
+type GeminiClient = {
+  models: {
+    generateContent: (params: {
+      model: string;
+      contents: string;
+      config: {
+        responseMimeType: string;
+      };
+    }) => Promise<{ text?: string }>;
+  };
+};
+
+type AnalyzeCodeWithGeminiOptions = {
+  clientFactory?: (apiKey: string) => GeminiClient;
+};
+
 export function buildRoastPrompt({
   code,
   roastMode,
@@ -42,22 +58,37 @@ export async function analyzeCodeWithGemini({
   code,
   roastMode,
   language,
-}: AnalyzeCodeWithGeminiInput): Promise<RoastAnalysisResult> {
-  const apiKey = process.env.GEMINI_API_KEY;
+  clientFactory,
+}: AnalyzeCodeWithGeminiInput &
+  AnalyzeCodeWithGeminiOptions): Promise<RoastAnalysisResult> {
+  const apiKey = process.env.GEMINI_API_KEY?.trim();
 
   if (!apiKey) {
-    throw new Error("Missing GEMINI_API_KEY");
+    throw new Error(
+      "Gemini service is not configured: GEMINI_API_KEY is missing or blank"
+    );
   }
 
-  const client = new GoogleGenAI({ apiKey });
+  const createClient =
+    clientFactory ??
+    ((resolvedApiKey: string) => new GoogleGenAI({ apiKey: resolvedApiKey }));
+
+  const client = createClient(apiKey);
   const prompt = buildRoastPrompt({ code, roastMode, language });
-  const response = await client.models.generateContent({
-    model: GEMINI_MODEL_ID,
-    contents: prompt,
-    config: {
-      responseMimeType: "application/json",
-    },
-  });
+
+  let response: { text?: string };
+
+  try {
+    response = await client.models.generateContent({
+      model: GEMINI_MODEL_ID,
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+      },
+    });
+  } catch (error) {
+    throw new Error("Gemini request failed", { cause: error });
+  }
 
   if (!response.text) {
     throw new Error("Gemini returned empty response");
