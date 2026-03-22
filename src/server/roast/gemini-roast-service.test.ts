@@ -78,4 +78,17 @@ describe("parseGeminiRoastResponse", () => {
       )
     );
   });
+
+  it("rejects whitespace-only roastQuote", () => {
+    assert.throws(() =>
+      parseGeminiRoastResponse(
+        JSON.stringify({
+          score: 3.2,
+          roastQuote: "   ",
+          analysisItems: [],
+          diffSuggestions: [],
+        })
+      )
+    );
+  });
 });
