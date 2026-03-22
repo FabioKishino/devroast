@@ -183,6 +183,29 @@ describe("createRoastAction", () => {
     );
   });
 
+  it("falls back to plaintext when language is unsupported", async () => {
+    const deps = makeDeps();
+
+    await assert.rejects(
+      () =>
+        createRoastAction(
+          null,
+          makeFormData({
+            code: "const a = 1;",
+            roastMode: "false",
+            language: "totally-unknown-lang",
+          }),
+          deps
+        ),
+      /REDIRECT:\/roast\/submission-1/
+    );
+
+    assert.equal(
+      (deps.calls.analyze[0] as { language?: string }).language,
+      "plaintext"
+    );
+  });
+
   it("returns error when Gemini analysis fails and does not persist", async () => {
     const deps = makeDeps({
       analyzeCodeWithGemini: async () => {
