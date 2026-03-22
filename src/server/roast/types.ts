@@ -19,7 +19,7 @@ export const roastDiffSuggestionSchema = z.object({
 
 export const roastAnalysisResultSchema = z.object({
   score: z.number().min(0).max(10),
-  roastQuote: z.string().min(1),
+  roastQuote: z.string().trim().min(1),
   analysisItems: z.array(roastAnalysisItemSchema),
   diffSuggestions: z.array(roastDiffSuggestionSchema),
 });

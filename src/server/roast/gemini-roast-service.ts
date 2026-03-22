@@ -1,4 +1,4 @@
-import type {} from "server-only";
+import "server-only";
 import { type RoastAnalysisResult, roastAnalysisResultSchema } from "./types";
 
 export function parseGeminiRoastResponse(raw: string): RoastAnalysisResult {
