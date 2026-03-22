@@ -3,13 +3,6 @@
 import { type ReactNode, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { CodeEditorRoot } from "@/components/ui/code-editor";
-import {
-  LeaderboardTableFooter,
-  LeaderboardTableGrid,
-  LeaderboardTableHeader,
-  LeaderboardTableRoot,
-  LeaderboardTableRow,
-} from "@/components/ui/leaderboard-table";
 import { Toggle } from "@/components/ui/toggle";
 
 const MAX_CODE_LENGTH = 2000;
@@ -31,47 +24,12 @@ const PLACEHOLDER_CODE = `function calculateTotal(items) {
   return total;
 }`;
 
-type LeaderboardRow = {
-  rank: number;
-  score: number;
-  codeLines: string[];
-  language: string;
-};
-
-const ROWS: LeaderboardRow[] = [
-  {
-    rank: 1,
-    score: 1.2,
-    codeLines: [
-      'eval(prompt("enter code"))',
-      "document.write(response)",
-      "// trust the user lol",
-    ],
-    language: "javascript",
-  },
-  {
-    rank: 2,
-    score: 1.8,
-    codeLines: [
-      "if (x == true) { return true; }",
-      "else if (x == false) { return false; }",
-      "else { return !false; }",
-    ],
-    language: "typescript",
-  },
-  {
-    rank: 3,
-    score: 2.1,
-    codeLines: ["SELECT * FROM users WHERE 1=1", "-- TODO: add authentication"],
-    language: "sql",
-  },
-];
-
 type HomePageClientProps = {
   stats: ReactNode;
+  leaderboard: ReactNode;
 };
 
-export function HomePageClient({ stats }: HomePageClientProps) {
+export function HomePageClient({ stats, leaderboard }: HomePageClientProps) {
   const [code, setCode] = useState(PLACEHOLDER_CODE);
   const isOverLimit = code.length > MAX_CODE_LENGTH;
 
@@ -126,22 +84,7 @@ export function HomePageClient({ stats }: HomePageClientProps) {
         <div className="h-16" />
 
         {/* ── Leaderboard Preview ──────────────────────────── */}
-        <LeaderboardTableRoot>
-          <LeaderboardTableHeader />
-          <LeaderboardTableGrid>
-            {ROWS.map((row, i) => (
-              <LeaderboardTableRow
-                key={row.rank}
-                rank={row.rank}
-                score={row.score}
-                codeLines={row.codeLines}
-                language={row.language}
-                isLast={i === ROWS.length - 1}
-              />
-            ))}
-          </LeaderboardTableGrid>
-          <LeaderboardTableFooter />
-        </LeaderboardTableRoot>
+        {leaderboard}
       </div>
     </main>
   );

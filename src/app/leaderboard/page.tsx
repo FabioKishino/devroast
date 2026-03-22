@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cacheLife } from "next/cache";
 import { CodeBlock } from "@/components/ui/code-block";
 import {
   LeaderboardEntryMeta,
@@ -18,6 +19,9 @@ export const metadata: Metadata = {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default async function LeaderboardPage() {
+  "use cache";
+  cacheLife("hours");
+
   const [entries, stats] = await Promise.all([
     caller.leaderboard.topShame({ limit: 20 }),
     caller.leaderboard.stats(),

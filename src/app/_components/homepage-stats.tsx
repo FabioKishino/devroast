@@ -1,11 +1,14 @@
-import { HydrateClient, prefetch, trpc } from "@/trpc/server";
+import { cacheLife } from "next/cache";
+import { caller } from "@/trpc/server";
 import { StatsNumbers } from "./stats-numbers";
 
-export function HomepageStats() {
-  prefetch(trpc.leaderboard.stats.queryOptions());
+export async function HomepageStats() {
+  "use cache";
+  cacheLife("hours");
+
+  const stats = await caller.leaderboard.stats();
+
   return (
-    <HydrateClient>
-      <StatsNumbers />
-    </HydrateClient>
+    <StatsNumbers totalCount={stats.totalCount} avgScore={stats.avgScore} />
   );
 }

@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["postgres"],
+  cacheComponents: true,
+  serverExternalPackages: ["postgres", "@node-rs/argon2", "@node-rs/bcrypt"],
 };
 
 export default nextConfig;

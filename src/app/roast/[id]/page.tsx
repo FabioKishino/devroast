@@ -1,3 +1,4 @@
+import { cacheLife } from "next/cache";
 import {
   AnalysisCardDescription,
   AnalysisCardRoot,
@@ -80,6 +81,9 @@ const ROAST = {
 // ── Page ───────────────────────────────────────────────────────────────────────
 
 export default async function RoastResultPage() {
+  "use cache";
+  cacheLife("hours");
+
   return (
     <main className="flex flex-col gap-10 px-20 py-10">
       {/* 1. Score Hero */}
