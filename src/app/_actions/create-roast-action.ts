@@ -5,6 +5,18 @@ import { z } from "zod";
 import type { RoastAnalysisResult } from "@/server/roast/types";
 
 const MAX_CODE_LENGTH = 20000;
+const SUPPORTED_LANGUAGES = new Set([
+  "plaintext",
+  "typescript",
+  "javascript",
+  "tsx",
+  "jsx",
+  "json",
+  "html",
+  "css",
+  "bash",
+  "sql",
+]);
 
 const formSchema = z.object({
   code: z
@@ -22,7 +34,15 @@ const formSchema = z.object({
       (value) => (typeof value === "string" ? value : undefined),
       z.string().optional()
     )
-    .transform((value) => value?.trim() || "plaintext"),
+    .transform((value) => {
+      const normalized = value?.trim().toLowerCase();
+
+      if (!normalized || !SUPPORTED_LANGUAGES.has(normalized)) {
+        return "plaintext";
+      }
+
+      return normalized;
+    }),
 });
 
 type CreateRoastActionState = {
