@@ -1,4 +1,3 @@
-import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
 import {
   AnalysisCardDescription,
@@ -48,9 +47,6 @@ function toVerdict(score: number): {
 export default async function RoastResultPage({
   params,
 }: RoastResultPageProps) {
-  "use cache";
-  cacheLife("hours");
-
   const { id } = await params;
 
   if (!isUuid(id)) {
