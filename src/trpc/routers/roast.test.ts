@@ -155,4 +155,32 @@ describe("roastRouter.byId", () => {
 
     assert.equal(result, null);
   });
+
+  it("normalizes non-numeric score payloads to zero", async () => {
+    process.env.DATABASE_URL ??= "postgresql://test:test@localhost:5432/test";
+    const { roastRouter } = await import("./roast");
+    const submissionId = "33333333-3333-4333-8333-333333333333";
+    const caller = roastRouter.createCaller({
+      db: createMockDb({
+        submissionRows: [
+          {
+            id: submissionId,
+            code: "const y = 2;",
+            language: "typescript",
+            linesCount: 1,
+            roastMode: false,
+            score: true as never,
+            roastQuote: "quote",
+            createdAt: new Date("2026-03-22T00:00:00.000Z"),
+          },
+        ],
+        analysisRows: [],
+        diffRows: [],
+      }) as never,
+    });
+
+    const result = await caller.byId({ id: submissionId });
+
+    assert.equal(result?.score, 0);
+  });
 });
