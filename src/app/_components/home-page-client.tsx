@@ -7,7 +7,7 @@ import { CodeEditorRoot } from "@/components/ui/code-editor";
 import { Toggle } from "@/components/ui/toggle";
 import { createRoastAction } from "../_actions/create-roast-action";
 
-const MAX_CODE_LENGTH = 2000;
+const MAX_CODE_LENGTH = 20000;
 
 const PLACEHOLDER_CODE = `function calculateTotal(items) {
   var total = 0;
@@ -33,6 +33,7 @@ type HomePageClientProps = {
 
 export function HomePageClient({ stats, leaderboard }: HomePageClientProps) {
   const [code, setCode] = useState(PLACEHOLDER_CODE);
+  const [language, setLanguage] = useState("text");
   const [roastMode, setRoastMode] = useState(true);
   const [actionState, formAction] = useActionState(
     async (state: { error?: string } | undefined, formData: FormData) => {
@@ -67,6 +68,7 @@ export function HomePageClient({ stats, leaderboard }: HomePageClientProps) {
         <CodeEditorRoot
           defaultCode={PLACEHOLDER_CODE}
           onCodeChange={setCode}
+          onLanguageChange={setLanguage}
           maxLength={MAX_CODE_LENGTH}
         />
 
@@ -78,6 +80,7 @@ export function HomePageClient({ stats, leaderboard }: HomePageClientProps) {
             name="roastMode"
             value={roastMode ? "true" : "false"}
           />
+          <input type="hidden" name="language" value={language} />
 
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-4">
@@ -94,7 +97,11 @@ export function HomePageClient({ stats, leaderboard }: HomePageClientProps) {
           </div>
 
           {actionState?.error ? (
-            <p className="font-secondary text-xs text-accent-red">
+            <p
+              className="font-secondary text-xs text-accent-red"
+              role="alert"
+              aria-live="polite"
+            >
               {actionState.error}
             </p>
           ) : null}
