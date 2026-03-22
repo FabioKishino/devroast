@@ -7,7 +7,11 @@ const byIdInput = z.object({
   id: z.string().uuid(),
 });
 
-function toFiniteScore(value: number | string | null): number {
+function toFiniteScore(value: number | string | boolean | null): number {
+  if (typeof value === "boolean") {
+    return 0;
+  }
+
   const parsed = Number(value);
 
   if (!Number.isFinite(parsed)) {
