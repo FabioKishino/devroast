@@ -264,6 +264,34 @@ describe("createRoastAction", () => {
     );
   });
 
+  it("preserves python language from editor options", async () => {
+    const deps = makeDeps();
+
+    await assert.rejects(
+      () =>
+        createRoastAction(
+          null,
+          makeFormData({
+            code: "print('hello')",
+            roastMode: "false",
+            language: "python",
+          }),
+          deps
+        ),
+      /REDIRECT:\/roast\/submission-1/
+    );
+
+    assert.equal(
+      (deps.calls.analyze[0] as { language?: string }).language,
+      "python"
+    );
+    assert.equal(
+      (deps.calls.persist[0] as { submission: { language: string } }).submission
+        .language,
+      "python"
+    );
+  });
+
   it("returns error when Gemini analysis fails and does not persist", async () => {
     const deps = makeDeps({
       analyzeCodeWithGemini: async () => {

@@ -2,21 +2,19 @@
 
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { LANGUAGE_OPTIONS } from "@/lib/languages";
 import type { RoastAnalysisResult } from "@/server/roast/types";
 
 const MAX_CODE_LENGTH = 20000;
-const SUPPORTED_LANGUAGES = new Set([
-  "plaintext",
-  "typescript",
-  "javascript",
-  "tsx",
-  "jsx",
-  "json",
-  "html",
-  "css",
-  "bash",
-  "sql",
-]);
+const SUPPORTED_LANGUAGES = new Set(
+  LANGUAGE_OPTIONS.flatMap((option) => {
+    if (option.value === null) {
+      return [];
+    }
+
+    return option.value === "text" ? ["plaintext"] : [option.value];
+  })
+);
 
 const formSchema = z.object({
   code: z
