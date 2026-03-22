@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import {
   createRoastAction,
   getCreateRoastActionConfig,
+  persistRoastInTransaction,
 } from "./create-roast-action";
 
 type CreateRoastActionDeps = {
@@ -42,12 +43,15 @@ type CreateRoastActionDeps = {
 
 function makeFormData(input: {
   code: string;
-  roastMode: string;
+  roastMode?: string;
   language?: string;
 }): FormData {
   const formData = new FormData();
   formData.set("code", input.code);
-  formData.set("roastMode", input.roastMode);
+
+  if (input.roastMode !== undefined) {
+    formData.set("roastMode", input.roastMode);
+  }
 
   if (input.language !== undefined) {
     formData.set("language", input.language);
@@ -183,6 +187,60 @@ describe("createRoastAction", () => {
     );
   });
 
+  it("returns validation error when roastMode is missing", async () => {
+    const deps = makeDeps();
+
+    const result = await createRoastAction(
+      null,
+      makeFormData({ code: "const a = 1;" }),
+      deps
+    );
+
+    assert.equal(typeof result?.error, "string");
+    assert.equal(deps.calls.analyze.length, 0);
+    assert.equal(deps.calls.persist.length, 0);
+  });
+
+  it("returns validation error when roastMode is invalid", async () => {
+    const deps = makeDeps();
+
+    const result = await createRoastAction(
+      null,
+      makeFormData({ code: "const a = 1;", roastMode: "maybe" }),
+      deps
+    );
+
+    assert.equal(typeof result?.error, "string");
+    assert.equal(deps.calls.analyze.length, 0);
+    assert.equal(deps.calls.persist.length, 0);
+  });
+
+  it("preserves raw code and counts trailing newline as an extra line", async () => {
+    const deps = makeDeps();
+    const code = "  const a = 1;\n";
+
+    await assert.rejects(
+      () =>
+        createRoastAction(
+          null,
+          makeFormData({ code, roastMode: "false" }),
+          deps
+        ),
+      /REDIRECT:\/roast\/submission-1/
+    );
+
+    assert.equal((deps.calls.analyze[0] as { code: string }).code, code);
+    const payload = deps.calls.persist[0] as {
+      submission: {
+        code: string;
+        linesCount: number;
+      };
+    };
+
+    assert.equal(payload.submission.code, code);
+    assert.equal(payload.submission.linesCount, 2);
+  });
+
   it("falls back to plaintext when language is unsupported", async () => {
     const deps = makeDeps();
 
@@ -257,5 +315,75 @@ describe("createRoastAction", () => {
     assert.equal(payload.analysisItems.length > 0, true);
     assert.equal(payload.diffSuggestions.length > 0, true);
     assert.equal(deps.calls.redirect[0], "/roast/submission-1");
+  });
+
+  it("rolls back pending writes when a child insert fails in transaction path", async () => {
+    const committed = {
+      submissions: 0,
+      analysis: 0,
+      diff: 0,
+    };
+
+    await assert.rejects(
+      () =>
+        persistRoastInTransaction(
+          {
+            submission: {
+              code: "const a = 1;",
+              language: "typescript",
+              linesCount: 1,
+              roastMode: false,
+              score: 4.2,
+              roastQuote: "quote",
+            },
+            analysisItems: [
+              {
+                severity: "warning",
+                title: "title",
+                description: "desc",
+                sortOrder: 0,
+              },
+            ],
+            diffSuggestions: [],
+          },
+          async (
+            work: (operations: {
+              insertSubmission: () => Promise<{ id: string }>;
+              insertAnalysisItems: () => Promise<void>;
+              insertDiffSuggestions: () => Promise<void>;
+            }) => Promise<{ id: string }>
+          ) => {
+            const pending = {
+              submissions: 0,
+              analysis: 0,
+              diff: 0,
+            };
+
+            const operations = {
+              insertSubmission: async () => {
+                pending.submissions += 1;
+                return { id: "submission-1" };
+              },
+              insertAnalysisItems: async () => {
+                throw new Error("analysis insert failed");
+              },
+              insertDiffSuggestions: async () => {
+                pending.diff += 1;
+              },
+            };
+
+            const result = await work(operations);
+            committed.submissions += pending.submissions;
+            committed.analysis += pending.analysis;
+            committed.diff += pending.diff;
+            return result;
+          }
+        ),
+      /analysis insert failed/
+    );
+
+    assert.equal(committed.submissions, 0);
+    assert.equal(committed.analysis, 0);
+    assert.equal(committed.diff, 0);
   });
 });

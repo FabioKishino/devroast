@@ -21,14 +21,13 @@ const SUPPORTED_LANGUAGES = new Set([
 const formSchema = z.object({
   code: z
     .string()
-    .transform((value) => value.trim())
-    .refine((value) => value.length > 0, {
+    .refine((value) => value.trim().length > 0, {
       message: "Please provide valid code before generating a roast.",
     })
     .refine((value) => value.length <= MAX_CODE_LENGTH, {
       message: `Code must be at most ${MAX_CODE_LENGTH} characters.`,
     }),
-  roastMode: z.preprocess((value) => value === "true", z.boolean()),
+  roastMode: z.enum(["true", "false"]).transform((value) => value === "true"),
   language: z
     .preprocess(
       (value) => (typeof value === "string" ? value : undefined),
@@ -72,6 +71,16 @@ type CreateRoastActionDeps = {
   redirect: (url: string) => never;
 };
 
+type TransactionOperations = {
+  insertSubmission: () => Promise<{ id: string }>;
+  insertAnalysisItems: () => Promise<void>;
+  insertDiffSuggestions: () => Promise<void>;
+};
+
+type TransactionRunner = <T>(
+  work: (operations: TransactionOperations) => Promise<T>
+) => Promise<T>;
+
 export async function getCreateRoastActionConfig() {
   return {
     MAX_CODE_LENGTH,
@@ -90,57 +99,91 @@ const defaultDeps: CreateRoastActionDeps = {
     const [{ db }, { analysisItems, diffSuggestions, submissions }] =
       await Promise.all([import("@/db"), import("@/db/schema")]);
 
-    return db.transaction(async (tx) => {
-      const insertedSubmission = await tx
-        .insert(submissions)
-        .values({
-          code: input.submission.code,
-          language: input.submission.language,
-          linesCount: input.submission.linesCount,
-          roastMode: input.submission.roastMode,
-          score: input.submission.score.toFixed(2),
-          roastQuote: input.submission.roastQuote,
-        })
-        .returning({ id: submissions.id });
+    return persistRoastInTransaction(input, async (work) => {
+      return db.transaction(async (tx) => {
+        let submissionId = "";
 
-      const submissionId = insertedSubmission[0]?.id;
+        return work({
+          insertSubmission: async () => {
+            const insertedSubmission = await tx
+              .insert(submissions)
+              .values({
+                code: input.submission.code,
+                language: input.submission.language,
+                linesCount: input.submission.linesCount,
+                roastMode: input.submission.roastMode,
+                score: input.submission.score.toFixed(2),
+                roastQuote: input.submission.roastQuote,
+              })
+              .returning({ id: submissions.id });
 
-      if (!submissionId) {
-        throw new Error("Failed to create submission");
-      }
+            const insertedId = insertedSubmission[0]?.id;
 
-      if (input.analysisItems.length > 0) {
-        await tx.insert(analysisItems).values(
-          input.analysisItems.map(
-            (item: RoastAnalysisResult["analysisItems"][number]) => ({
-              submissionId,
-              severity: item.severity,
-              title: item.title,
-              description: item.description,
-              sortOrder: item.sortOrder,
-            })
-          )
-        );
-      }
+            if (!insertedId) {
+              throw new Error("Failed to create submission");
+            }
 
-      if (input.diffSuggestions.length > 0) {
-        await tx.insert(diffSuggestions).values(
-          input.diffSuggestions.map(
-            (item: RoastAnalysisResult["diffSuggestions"][number]) => ({
-              submissionId,
-              lineType: item.lineType,
-              content: item.content,
-              lineNumber: item.lineNumber,
-            })
-          )
-        );
-      }
+            submissionId = insertedId;
 
-      return { id: submissionId };
+            return { id: submissionId };
+          },
+          insertAnalysisItems: async () => {
+            if (input.analysisItems.length === 0) {
+              return;
+            }
+
+            await tx.insert(analysisItems).values(
+              input.analysisItems.map(
+                (item: RoastAnalysisResult["analysisItems"][number]) => ({
+                  submissionId,
+                  severity: item.severity,
+                  title: item.title,
+                  description: item.description,
+                  sortOrder: item.sortOrder,
+                })
+              )
+            );
+          },
+          insertDiffSuggestions: async () => {
+            if (input.diffSuggestions.length === 0) {
+              return;
+            }
+
+            await tx.insert(diffSuggestions).values(
+              input.diffSuggestions.map(
+                (item: RoastAnalysisResult["diffSuggestions"][number]) => ({
+                  submissionId,
+                  lineType: item.lineType,
+                  content: item.content,
+                  lineNumber: item.lineNumber,
+                })
+              )
+            );
+          },
+        });
+      });
     });
   },
   redirect,
 };
+
+export async function persistRoastInTransaction(
+  input: PersistRoastInput,
+  runTransaction: TransactionRunner
+): Promise<{ id: string }> {
+  void input;
+  let submissionId = "";
+
+  return runTransaction(async (operations) => {
+    const inserted = await operations.insertSubmission();
+    submissionId = inserted.id;
+
+    await operations.insertAnalysisItems();
+    await operations.insertDiffSuggestions();
+
+    return { id: submissionId };
+  });
+}
 
 export async function createRoastAction(
   _previousState: CreateRoastActionState | null,
