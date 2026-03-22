@@ -24,11 +24,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${jetBrainsMono.variable} bg-bg-page`}>
+        <Navbar />
+        {/* Cache Components: isolate uncached TRPC client reads under Suspense. */}
         <Suspense fallback={null}>
-          <TRPCReactProvider>
-            <Navbar />
-            {children}
-          </TRPCReactProvider>
+          <TRPCReactProvider>{children}</TRPCReactProvider>
         </Suspense>
       </body>
     </html>
