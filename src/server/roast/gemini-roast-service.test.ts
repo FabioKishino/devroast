@@ -1,16 +1,10 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { parseGeminiRoastResponse } from "./gemini-roast-service";
-
-describe("gemini-roast-service module", () => {
-  it("exports parser function", () => {
-    assert.equal(typeof parseGeminiRoastResponse, "function");
-  });
-});
+import { parseRoastAnalysisResult } from "./types";
 
 describe("parseGeminiRoastResponse", () => {
   it("parses valid roast payload", () => {
-    const parsed = parseGeminiRoastResponse(
+    const parsed = parseRoastAnalysisResult(
       JSON.stringify({
         score: 3.2,
         roastQuote: "harsh quote",
@@ -38,12 +32,12 @@ describe("parseGeminiRoastResponse", () => {
   });
 
   it("rejects malformed JSON", () => {
-    assert.throws(() => parseGeminiRoastResponse("{ score: 3.2"));
+    assert.throws(() => parseRoastAnalysisResult("{ score: 3.2"));
   });
 
   it("rejects invalid enum values", () => {
     assert.throws(() =>
-      parseGeminiRoastResponse(
+      parseRoastAnalysisResult(
         JSON.stringify({
           score: 3.2,
           roastQuote: "harsh quote",
@@ -69,7 +63,7 @@ describe("parseGeminiRoastResponse", () => {
 
   it("rejects missing required fields", () => {
     assert.throws(() =>
-      parseGeminiRoastResponse(
+      parseRoastAnalysisResult(
         JSON.stringify({
           score: 3.2,
           analysisItems: [],
@@ -81,7 +75,7 @@ describe("parseGeminiRoastResponse", () => {
 
   it("rejects whitespace-only roastQuote", () => {
     assert.throws(() =>
-      parseGeminiRoastResponse(
+      parseRoastAnalysisResult(
         JSON.stringify({
           score: 3.2,
           roastQuote: "   ",

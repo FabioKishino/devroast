@@ -27,3 +27,9 @@ export const roastAnalysisResultSchema = z.object({
 export type RoastAnalysisItem = z.infer<typeof roastAnalysisItemSchema>;
 export type RoastDiffSuggestion = z.infer<typeof roastDiffSuggestionSchema>;
 export type RoastAnalysisResult = z.infer<typeof roastAnalysisResultSchema>;
+
+export function parseRoastAnalysisResult(raw: string): RoastAnalysisResult {
+  const payload = JSON.parse(raw);
+
+  return roastAnalysisResultSchema.parse(payload);
+}
