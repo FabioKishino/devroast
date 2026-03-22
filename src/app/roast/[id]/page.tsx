@@ -19,11 +19,30 @@ type RoastResultPageProps = {
   }>;
 };
 
-function toVerdict(score: number): string {
-  if (score <= 3) return "needs_serious_help";
-  if (score <= 6) return "room_for_improvement";
-  if (score <= 8) return "solid_work";
-  return "clean_code_machine";
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function isUuid(value: string): boolean {
+  return UUID_REGEX.test(value);
+}
+
+function toVerdict(score: number): {
+  label: string;
+  variant: "critical" | "warning" | "good";
+} {
+  if (score <= 3) {
+    return { label: "needs_serious_help", variant: "critical" };
+  }
+
+  if (score <= 6) {
+    return { label: "room_for_improvement", variant: "warning" };
+  }
+
+  if (score <= 8) {
+    return { label: "solid_work", variant: "good" };
+  }
+
+  return { label: "clean_code_machine", variant: "good" };
 }
 
 export default async function RoastResultPage({
@@ -33,6 +52,11 @@ export default async function RoastResultPage({
   cacheLife("hours");
 
   const { id } = await params;
+
+  if (!isUuid(id)) {
+    notFound();
+  }
+
   const roast = await caller.roast.byId({ id });
 
   if (!roast) {
@@ -48,7 +72,7 @@ export default async function RoastResultPage({
         <ScoreRing score={roast.score} />
 
         <div className="flex flex-col gap-4">
-          <Badge variant="critical">verdict: {verdict}</Badge>
+          <Badge variant={verdict.variant}>verdict: {verdict.label}</Badge>
 
           <p className="font-secondary text-xl leading-relaxed text-text-primary">
             {roast.roastQuote ?? "no roast quote available."}
