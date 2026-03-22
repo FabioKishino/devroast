@@ -147,11 +147,51 @@ export async function createRoastAction(
   formData: FormData,
   deps: CreateRoastActionDeps = defaultDeps
 ): Promise<CreateRoastActionState | undefined> {
-  void _previousState;
-  void formData;
-  void deps;
+  const parsed = formSchema.safeParse({
+    code: formData.get("code"),
+    roastMode: formData.get("roastMode"),
+    language: formData.get("language"),
+  });
 
-  return {
-    error: "Temporary red state",
-  };
+  if (!parsed.success) {
+    return {
+      error:
+        parsed.error.issues[0]?.message ??
+        "Please provide valid code before generating a roast.",
+    };
+  }
+
+  const code = parsed.data.code;
+  const roastMode = parsed.data.roastMode;
+  const language = parsed.data.language;
+  const linesCount = code.length === 0 ? 0 : code.split(/\r?\n/).length;
+
+  let saved: { id: string };
+
+  try {
+    const analysis = await deps.analyzeCodeWithGemini({
+      code,
+      roastMode,
+      language,
+    });
+
+    saved = await deps.persistRoast({
+      submission: {
+        code,
+        language,
+        linesCount,
+        roastMode,
+        score: analysis.score,
+        roastQuote: analysis.roastQuote,
+      },
+      analysisItems: analysis.analysisItems,
+      diffSuggestions: analysis.diffSuggestions,
+    });
+  } catch {
+    return {
+      error: "Could not generate roast. Please try again.",
+    };
+  }
+
+  deps.redirect(`/roast/${saved.id}`);
 }
