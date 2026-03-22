@@ -1,9 +1,11 @@
 "use client";
 
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useActionState, useState } from "react";
+import { useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { CodeEditorRoot } from "@/components/ui/code-editor";
 import { Toggle } from "@/components/ui/toggle";
+import { createRoastAction } from "../_actions/create-roast-action";
 
 const MAX_CODE_LENGTH = 2000;
 
@@ -31,7 +33,15 @@ type HomePageClientProps = {
 
 export function HomePageClient({ stats, leaderboard }: HomePageClientProps) {
   const [code, setCode] = useState(PLACEHOLDER_CODE);
+  const [roastMode, setRoastMode] = useState(true);
+  const [actionState, formAction] = useActionState(
+    async (state: { error?: string } | undefined, formData: FormData) => {
+      return createRoastAction(state ?? null, formData);
+    },
+    undefined
+  );
   const isOverLimit = code.length > MAX_CODE_LENGTH;
+  const isSubmitDisabled = !code.trim() || isOverLimit;
 
   return (
     <main className="min-h-screen bg-bg-page">
@@ -61,21 +71,34 @@ export function HomePageClient({ stats, leaderboard }: HomePageClientProps) {
         />
 
         {/* ── Actions Bar ──────────────────────────────────── */}
-        <div className="flex items-center justify-between w-full">
-          <div className="flex items-center gap-4">
-            <Toggle label="roast mode" defaultPressed />
-            <span className="font-secondary text-xs text-text-tertiary">
-              {"// maximum sarcasm enabled"}
-            </span>
+        <form action={formAction} className="flex flex-col gap-2 w-full">
+          <input type="hidden" name="code" value={code} />
+          <input
+            type="hidden"
+            name="roastMode"
+            value={roastMode ? "true" : "false"}
+          />
+
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-4">
+              <Toggle
+                label="roast mode"
+                pressed={roastMode}
+                onPressedChange={setRoastMode}
+              />
+              <span className="font-secondary text-xs text-text-tertiary">
+                {"// maximum sarcasm enabled"}
+              </span>
+            </div>
+            <SubmitButton disabled={isSubmitDisabled} />
           </div>
-          <Button
-            variant="primary"
-            size="md"
-            disabled={!code.trim() || isOverLimit}
-          >
-            $ roast_my_code
-          </Button>
-        </div>
+
+          {actionState?.error ? (
+            <p className="font-secondary text-xs text-accent-red">
+              {actionState.error}
+            </p>
+          ) : null}
+        </form>
 
         {/* ── Footer hint ──────────────────────────────────── */}
         {stats}
@@ -87,5 +110,19 @@ export function HomePageClient({ stats, leaderboard }: HomePageClientProps) {
         {leaderboard}
       </div>
     </main>
+  );
+}
+
+type SubmitButtonProps = {
+  disabled: boolean;
+};
+
+function SubmitButton({ disabled }: SubmitButtonProps) {
+  const { pending } = useFormStatus();
+
+  return (
+    <Button variant="primary" size="md" disabled={disabled || pending}>
+      {pending ? "$ roasting..." : "$ roast_my_code"}
+    </Button>
   );
 }
