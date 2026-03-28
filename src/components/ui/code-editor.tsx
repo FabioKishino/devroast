@@ -20,6 +20,7 @@ import { LANGUAGE_OPTIONS } from "@/lib/languages";
 export type CodeEditorRootProps = {
   defaultCode?: string;
   onCodeChange?: (code: string) => void;
+  onLanguageChange?: (language: string) => void;
   maxLength?: number;
   className?: string;
 };
@@ -31,6 +32,7 @@ export type CodeEditorRootProps = {
 export function CodeEditorRoot({
   defaultCode = "",
   onCodeChange,
+  onLanguageChange,
   maxLength = 5000,
   className,
 }: CodeEditorRootProps) {
@@ -109,6 +111,10 @@ export function CodeEditorRoot({
       cancelled = true;
     };
   }, [code, activeLanguage]);
+
+  useEffect(() => {
+    onLanguageChange?.(activeLanguage);
+  }, [activeLanguage, onLanguageChange]);
 
   return (
     <div

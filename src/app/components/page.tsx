@@ -1,3 +1,4 @@
+import { cacheLife } from "next/cache";
 import {
   AnalysisCardDescription,
   AnalysisCardRoot,
@@ -63,7 +64,10 @@ const sampleCode = `function greet(name: string): string {
 const result = greet("DevRoast");
 console.log(result);`;
 
-export default function ComponentsPage() {
+export default async function ComponentsPage() {
+  "use cache";
+  cacheLife("hours");
+
   return (
     <main className="min-h-screen bg-bg-page px-20 py-16">
       <div className="mx-auto flex max-w-4xl flex-col gap-16">

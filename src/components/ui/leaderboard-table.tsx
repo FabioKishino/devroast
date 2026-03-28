@@ -1,6 +1,8 @@
 import Link from "next/link";
 import type { ComponentProps } from "react";
 import { twMerge } from "tailwind-merge";
+import { CodeBlock } from "./code-block";
+import { LeaderboardEntryCode } from "./leaderboard-entry-code";
 
 // ── Root ─────────────────────────────────────────────────────────────────────
 
@@ -56,24 +58,9 @@ export function LeaderboardTableGrid({
 }: ComponentProps<"div">) {
   return (
     <div
-      className={twMerge("border border-border-primary w-full", className)}
+      className={twMerge("flex flex-col gap-5 w-full", className)}
       {...props}
     >
-      {/* Column headers */}
-      <div className="flex items-center h-10 px-5 bg-bg-surface border-b border-border-primary">
-        <span className="font-secondary text-xs font-medium text-text-tertiary w-12 shrink-0">
-          #
-        </span>
-        <span className="font-secondary text-xs font-medium text-text-tertiary w-16 shrink-0">
-          score
-        </span>
-        <span className="font-secondary text-xs font-medium text-text-tertiary flex-1">
-          code
-        </span>
-        <span className="font-secondary text-xs font-medium text-text-tertiary w-24 shrink-0 text-right">
-          lang
-        </span>
-      </div>
       {children}
     </div>
   );
@@ -90,58 +77,132 @@ function scoreColorClass(score: number): string {
 type LeaderboardTableRowProps = Omit<ComponentProps<"div">, "children"> & {
   rank: number;
   score: number;
-  codeLines: string[];
   language: string;
   isLast?: boolean;
-};
+} & (
+    | { codeLines: string[]; code?: never }
+    | { code: string; codeLines?: never }
+  );
 
-export function LeaderboardTableRow({
+export async function LeaderboardTableRow({
   rank,
   score,
   codeLines,
+  code,
   language,
   isLast = false,
   className,
   ...props
 }: LeaderboardTableRowProps) {
+  // Se code está presente, renderizar com syntax highlighting
+  if (code) {
+    const lineCount = code.split("\n").length;
+
+    return (
+      <div
+        className={twMerge(
+          "flex flex-col border border-border-primary overflow-hidden",
+          !isLast && "border-b border-border-primary",
+          className
+        )}
+        {...props}
+      >
+        <div className="flex items-center justify-between h-12 px-5 border-b border-border-primary">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1.5">
+              <span className="font-mono text-xs text-text-tertiary">#</span>
+              <span className="font-mono text-sm font-bold text-accent-amber">
+                {rank}
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="font-mono text-xs text-text-tertiary">
+                score:
+              </span>
+              <span
+                className={twMerge(
+                  "font-mono text-sm font-bold",
+                  scoreColorClass(score)
+                )}
+              >
+                {score.toFixed(1)}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <span className="font-mono text-xs text-text-secondary">
+              {language}
+            </span>
+            <span className="font-mono text-xs text-text-tertiary">
+              {lineCount} {lineCount === 1 ? "line" : "lines"}
+            </span>
+          </div>
+        </div>
+
+        <LeaderboardEntryCode lineCount={lineCount}>
+          <CodeBlock
+            code={code}
+            lang={language}
+            className="[&>pre]:w-full [&>pre]:p-0 [&>pre]:bg-transparent [&>pre]:text-xs [&>pre]:leading-tight"
+          />
+        </LeaderboardEntryCode>
+      </div>
+    );
+  }
+
+  // Caso fallback para skeleton (usa codeLines simples)
   return (
     <div
       className={twMerge(
-        "flex items-start p-4 px-5 hover:bg-bg-elevated transition-colors",
-        !isLast && "border-b border-border-primary",
+        "flex flex-col border border-border-primary overflow-hidden",
         className
       )}
       {...props}
     >
-      <span className="font-secondary text-xs text-text-secondary w-12 shrink-0 pt-0.5">
-        {rank}
-      </span>
-      <span
-        className={twMerge(
-          "font-secondary text-xs font-bold w-16 shrink-0 pt-0.5",
-          scoreColorClass(score)
-        )}
-      >
-        {score.toFixed(1)}
-      </span>
-      <div className="flex flex-col gap-0.5 flex-1">
-        {codeLines.map((line) => (
-          <span
-            key={line}
-            className={twMerge(
-              "font-secondary text-xs",
-              line.startsWith("//") || line.startsWith("--")
-                ? "text-text-tertiary"
-                : "text-text-primary"
-            )}
-          >
-            {line}
-          </span>
-        ))}
+      <div className="flex items-center justify-between h-12 px-5 border-b border-border-primary">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1.5">
+            <span className="inline-block w-3 h-3 bg-bg-elevated animate-pulse rounded-sm" />
+            <span className="inline-block w-4 h-3 bg-bg-elevated animate-pulse rounded-sm" />
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="inline-block w-10 h-3 bg-bg-elevated animate-pulse rounded-sm" />
+            <span className="inline-block w-6 h-3 bg-bg-elevated animate-pulse rounded-sm" />
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="inline-block w-16 h-3 bg-bg-elevated animate-pulse rounded-sm" />
+          <span className="inline-block w-14 h-3 bg-bg-elevated animate-pulse rounded-sm" />
+        </div>
       </div>
-      <span className="font-secondary text-xs text-text-secondary w-24 shrink-0 text-right pt-0.5">
-        {language}
-      </span>
+
+      <div className="flex flex-col gap-2 p-4 bg-bg-input">
+        <div className="flex flex-col gap-0.5">
+          {codeLines?.[0] === "—" ? (
+            <>
+              <span className="inline-block w-4/5 h-3 bg-bg-elevated animate-pulse rounded-sm" />
+              <span className="inline-block w-3/5 h-3 bg-bg-elevated animate-pulse rounded-sm" />
+              <span className="inline-block w-2/3 h-3 bg-bg-elevated animate-pulse rounded-sm" />
+              <span className="inline-block w-1/2 h-3 bg-bg-elevated animate-pulse rounded-sm" />
+            </>
+          ) : (
+            codeLines?.map((line) => (
+              <span
+                key={line}
+                className={twMerge(
+                  "font-secondary text-xs",
+                  line.startsWith("//") || line.startsWith("--")
+                    ? "text-text-tertiary"
+                    : "text-text-primary"
+                )}
+              >
+                {line}
+              </span>
+            ))
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -149,16 +210,17 @@ export function LeaderboardTableRow({
 // ── Footer ────────────────────────────────────────────────────────────────────
 
 export function LeaderboardTableFooter({
+  totalCount = 2847,
   className,
   ...props
-}: Omit<ComponentProps<"div">, "children">) {
+}: Omit<ComponentProps<"div">, "children"> & { totalCount?: number }) {
   return (
     <div className={twMerge("flex justify-center py-4", className)} {...props}>
       <Link
         href="/leaderboard"
         className="font-secondary text-xs text-text-tertiary hover:text-text-secondary transition-colors"
       >
-        {"showing top 3 of 2,847 · view full leaderboard >>"}
+        {`showing top 3 of ${totalCount.toLocaleString()} · view full leaderboard >>`}
       </Link>
     </div>
   );

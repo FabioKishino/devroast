@@ -1,18 +1,13 @@
 "use client";
 
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useActionState, useState } from "react";
+import { useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { CodeEditorRoot } from "@/components/ui/code-editor";
-import {
-  LeaderboardTableFooter,
-  LeaderboardTableGrid,
-  LeaderboardTableHeader,
-  LeaderboardTableRoot,
-  LeaderboardTableRow,
-} from "@/components/ui/leaderboard-table";
 import { Toggle } from "@/components/ui/toggle";
+import { createRoastAction } from "../_actions/create-roast-action";
 
-const MAX_CODE_LENGTH = 2000;
+const MAX_CODE_LENGTH = 20000;
 
 const PLACEHOLDER_CODE = `function calculateTotal(items) {
   var total = 0;
@@ -31,49 +26,23 @@ const PLACEHOLDER_CODE = `function calculateTotal(items) {
   return total;
 }`;
 
-type LeaderboardRow = {
-  rank: number;
-  score: number;
-  codeLines: string[];
-  language: string;
-};
-
-const ROWS: LeaderboardRow[] = [
-  {
-    rank: 1,
-    score: 1.2,
-    codeLines: [
-      'eval(prompt("enter code"))',
-      "document.write(response)",
-      "// trust the user lol",
-    ],
-    language: "javascript",
-  },
-  {
-    rank: 2,
-    score: 1.8,
-    codeLines: [
-      "if (x == true) { return true; }",
-      "else if (x == false) { return false; }",
-      "else { return !false; }",
-    ],
-    language: "typescript",
-  },
-  {
-    rank: 3,
-    score: 2.1,
-    codeLines: ["SELECT * FROM users WHERE 1=1", "-- TODO: add authentication"],
-    language: "sql",
-  },
-];
-
 type HomePageClientProps = {
   stats: ReactNode;
+  leaderboard: ReactNode;
 };
 
-export function HomePageClient({ stats }: HomePageClientProps) {
+export function HomePageClient({ stats, leaderboard }: HomePageClientProps) {
   const [code, setCode] = useState(PLACEHOLDER_CODE);
+  const [language, setLanguage] = useState("text");
+  const [roastMode, setRoastMode] = useState(true);
+  const [actionState, formAction] = useActionState(
+    async (state: { error?: string } | undefined, formData: FormData) => {
+      return createRoastAction(state ?? null, formData);
+    },
+    undefined
+  );
   const isOverLimit = code.length > MAX_CODE_LENGTH;
+  const isSubmitDisabled = !code.trim() || isOverLimit;
 
   return (
     <main className="min-h-screen bg-bg-page">
@@ -99,25 +68,44 @@ export function HomePageClient({ stats }: HomePageClientProps) {
         <CodeEditorRoot
           defaultCode={PLACEHOLDER_CODE}
           onCodeChange={setCode}
+          onLanguageChange={setLanguage}
           maxLength={MAX_CODE_LENGTH}
         />
 
         {/* ── Actions Bar ──────────────────────────────────── */}
-        <div className="flex items-center justify-between w-full">
-          <div className="flex items-center gap-4">
-            <Toggle label="roast mode" defaultPressed />
-            <span className="font-secondary text-xs text-text-tertiary">
-              {"// maximum sarcasm enabled"}
-            </span>
+        <form action={formAction} className="flex flex-col gap-2 w-full">
+          <input type="hidden" name="code" value={code} />
+          <input
+            type="hidden"
+            name="roastMode"
+            value={roastMode ? "true" : "false"}
+          />
+          <input type="hidden" name="language" value={language} />
+
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-4">
+              <Toggle
+                label="roast mode"
+                pressed={roastMode}
+                onPressedChange={setRoastMode}
+              />
+              <span className="font-secondary text-xs text-text-tertiary">
+                {"// maximum sarcasm enabled"}
+              </span>
+            </div>
+            <SubmitButton disabled={isSubmitDisabled} />
           </div>
-          <Button
-            variant="primary"
-            size="md"
-            disabled={!code.trim() || isOverLimit}
-          >
-            $ roast_my_code
-          </Button>
-        </div>
+
+          {actionState?.error ? (
+            <p
+              className="font-secondary text-xs text-accent-red"
+              role="alert"
+              aria-live="polite"
+            >
+              {actionState.error}
+            </p>
+          ) : null}
+        </form>
 
         {/* ── Footer hint ──────────────────────────────────── */}
         {stats}
@@ -126,23 +114,22 @@ export function HomePageClient({ stats }: HomePageClientProps) {
         <div className="h-16" />
 
         {/* ── Leaderboard Preview ──────────────────────────── */}
-        <LeaderboardTableRoot>
-          <LeaderboardTableHeader />
-          <LeaderboardTableGrid>
-            {ROWS.map((row, i) => (
-              <LeaderboardTableRow
-                key={row.rank}
-                rank={row.rank}
-                score={row.score}
-                codeLines={row.codeLines}
-                language={row.language}
-                isLast={i === ROWS.length - 1}
-              />
-            ))}
-          </LeaderboardTableGrid>
-          <LeaderboardTableFooter />
-        </LeaderboardTableRoot>
+        {leaderboard}
       </div>
     </main>
+  );
+}
+
+type SubmitButtonProps = {
+  disabled: boolean;
+};
+
+function SubmitButton({ disabled }: SubmitButtonProps) {
+  const { pending } = useFormStatus();
+
+  return (
+    <Button variant="primary" size="md" disabled={disabled || pending}>
+      {pending ? "$ roasting..." : "$ roast_my_code"}
+    </Button>
   );
 }

@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import { cacheLife } from "next/cache";
 import { CodeBlock } from "@/components/ui/code-block";
 import {
-  type LeaderboardEntryData,
   LeaderboardEntryMeta,
   LeaderboardEntryRoot,
 } from "@/components/ui/leaderboard-entry";
+import { LeaderboardEntryCode } from "@/components/ui/leaderboard-entry-code";
+import { caller } from "@/trpc/server";
 
 // ── Metadata (SSR) ────────────────────────────────────────────────────────────
 
@@ -14,52 +16,17 @@ export const metadata: Metadata = {
     "The most roasted code on the internet, ranked by shame. Browse the worst code submissions and their brutal AI feedback scores.",
 };
 
-// ── Static data ───────────────────────────────────────────────────────────────
-
-const ENTRIES: LeaderboardEntryData[] = [
-  {
-    rank: 1,
-    score: 1.2,
-    language: "javascript",
-    linesCount: 3,
-    code: 'eval(prompt("enter code"))\ndocument.write(response)\n// trust the user lol',
-  },
-  {
-    rank: 2,
-    score: 1.8,
-    language: "javascript",
-    linesCount: 3,
-    code: "if (x == true) { return true; }\nelse if (x == false) { return false; }\nelse { return !false; }",
-  },
-  {
-    rank: 3,
-    score: 2.1,
-    language: "sql",
-    linesCount: 2,
-    code: "SELECT * FROM users WHERE 1=1\n-- TODO: add authentication",
-  },
-  {
-    rank: 4,
-    score: 2.3,
-    language: "java",
-    linesCount: 3,
-    code: "catch (e) {\n  // ignore\n}",
-  },
-  {
-    rank: 5,
-    score: 2.5,
-    language: "javascript",
-    linesCount: 3,
-    code: "const sleep = (ms) =>\n  new Date(Date.now() + ms)\n  while(new Date() < end) {}",
-  },
-];
-
-const TOTAL_SUBMISSIONS = 2847;
-const AVG_SCORE = 4.2;
-
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-export default function LeaderboardPage() {
+export default async function LeaderboardPage() {
+  "use cache";
+  cacheLife("hours");
+
+  const [entries, stats] = await Promise.all([
+    caller.leaderboard.topShame({ limit: 20 }),
+    caller.leaderboard.stats(),
+  ]);
+
   return (
     <main className="flex flex-col w-full max-w-360 mx-auto px-20 py-10 gap-10">
       {/* Hero section */}
@@ -83,11 +50,11 @@ export default function LeaderboardPage() {
           {/* Stats */}
           <div className="flex items-center gap-2">
             <span className="font-secondary text-xs text-text-tertiary">
-              {TOTAL_SUBMISSIONS.toLocaleString("en-US")} submissions
+              {stats.totalCount.toLocaleString("en-US")} submissions
             </span>
             <span className="font-secondary text-xs text-text-tertiary">·</span>
             <span className="font-secondary text-xs text-text-tertiary">
-              avg score: {AVG_SCORE}/10
+              avg score: {stats.avgScore.toFixed(1)}/10
             </span>
           </div>
         </div>
@@ -95,23 +62,27 @@ export default function LeaderboardPage() {
 
       {/* Entries */}
       <section className="flex flex-col gap-5 w-full">
-        {ENTRIES.map((entry) => (
-          <LeaderboardEntryRoot key={entry.rank}>
-            <LeaderboardEntryMeta
-              rank={entry.rank}
-              score={entry.score}
-              language={entry.language}
-              linesCount={entry.linesCount}
-            />
-            <div className="h-30 bg-bg-input overflow-hidden">
-              <CodeBlock
-                code={entry.code}
-                lang={entry.language}
-                className="h-full [&>pre]:p-4! [&>pre]:h-full [&>pre]:overflow-hidden"
-              />
+        {entries.length === 0 ? (
+          <LeaderboardEntryRoot>
+            <div className="px-5 py-6 font-secondary text-sm text-text-secondary">
+              {"// no roasted submissions yet"}
             </div>
           </LeaderboardEntryRoot>
-        ))}
+        ) : (
+          entries.map((entry, index) => (
+            <LeaderboardEntryRoot key={entry.id}>
+              <LeaderboardEntryMeta
+                rank={index + 1}
+                score={entry.score}
+                language={entry.language}
+                linesCount={entry.linesCount}
+              />
+              <LeaderboardEntryCode lineCount={entry.linesCount}>
+                <CodeBlock code={entry.code} lang={entry.language} />
+              </LeaderboardEntryCode>
+            </LeaderboardEntryRoot>
+          ))
+        )}
       </section>
     </main>
   );

@@ -48,15 +48,38 @@ type CodeBlockProps = {
   className?: string;
 };
 
+function isUnsupportedLanguageError(error: unknown): boolean {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  return /language.+(not found|not included|invalid|unsupported)/i.test(
+    error.message
+  );
+}
+
 export async function CodeBlock({
   code,
   lang = "typescript",
   className,
 }: CodeBlockProps) {
-  const html = await codeToHtml(code, {
-    lang,
-    theme: "vesper",
-  });
+  let html: string;
+
+  try {
+    html = await codeToHtml(code, {
+      lang,
+      theme: "vesper",
+    });
+  } catch (error) {
+    if (!isUnsupportedLanguageError(error)) {
+      throw error;
+    }
+
+    html = await codeToHtml(code, {
+      lang: "plaintext",
+      theme: "vesper",
+    });
+  }
 
   return (
     <div

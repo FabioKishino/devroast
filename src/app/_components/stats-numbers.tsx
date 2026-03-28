@@ -1,18 +1,18 @@
 "use client";
 
 import NumberFlow from "@number-flow/react";
-import { useQuery } from "@tanstack/react-query";
-import { useTRPC } from "@/trpc/client";
 
-export function StatsNumbers() {
-  const trpc = useTRPC();
-  const { data } = useQuery(trpc.leaderboard.stats.queryOptions());
+type StatsNumbersProps = {
+  totalCount: number;
+  avgScore: number;
+};
 
+export function StatsNumbers({ totalCount, avgScore }: StatsNumbersProps) {
   return (
     <div className="flex items-center justify-center gap-6">
       <span className="font-secondary text-xs text-text-tertiary inline-flex items-center gap-1">
         <NumberFlow
-          value={data?.totalCount ?? 0}
+          value={totalCount}
           className="font-secondary text-xs text-text-tertiary tabular-nums"
         />
         {" codes roasted"}
@@ -21,7 +21,7 @@ export function StatsNumbers() {
       <span className="font-secondary text-xs text-text-tertiary inline-flex items-center gap-1">
         {"avg score: "}
         <NumberFlow
-          value={data?.avgScore ?? 0}
+          value={avgScore}
           format={{ minimumFractionDigits: 1, maximumFractionDigits: 1 }}
           className="font-secondary text-xs text-text-tertiary tabular-nums"
         />

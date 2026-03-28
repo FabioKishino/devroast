@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono } from "next/font/google";
+import { Suspense } from "react";
 import { Navbar } from "@/components/ui/navbar";
 import { TRPCReactProvider } from "@/trpc/client";
 import "./globals.css";
@@ -23,10 +24,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${jetBrainsMono.variable} bg-bg-page`}>
-        <TRPCReactProvider>
-          <Navbar />
-          {children}
-        </TRPCReactProvider>
+        <Navbar />
+        {/* Cache Components: isolate uncached TRPC client reads under Suspense. */}
+        <Suspense fallback={null}>
+          <TRPCReactProvider>{children}</TRPCReactProvider>
+        </Suspense>
       </body>
     </html>
   );
