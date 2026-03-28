@@ -24,6 +24,7 @@ When a page needs both server-side data fetching and client-side interactivity:
 2. **Extract interactive logic** into a separate Client Component (e.g. `HomePageClient`)
 3. **Extract data fetching** into a separate Server Component (e.g. `HomepageStats`)
 4. **Compose them in `page.tsx`** using the React slot pattern
+5. **When prefetching multiple queries**, use `Promise.all` to fetch them in parallel
 
 ### Example: Homepage with stats
 
@@ -75,11 +76,45 @@ export function HomepageStats() {
 }
 ```
 
+### Example: Prefetching multiple queries in parallel
+
+When a Server Component needs to prefetch multiple queries, use `Promise.all`:
+
+```tsx
+// src/app/_components/homepage-leaderboard.tsx (Server Component)
+import { Suspense } from "react";
+import { HydrateClient, prefetch, trpc } from "@/trpc/server";
+import { LeaderboardContent } from "./leaderboard-content";
+import { LeaderboardSkeleton } from "./leaderboard-skeleton";
+
+export function HomepageLeaderboard() {
+  // Prefetch both queries in parallel for better performance
+  Promise.all([
+    prefetch(trpc.leaderboard.topShame.queryOptions()),
+    prefetch(trpc.leaderboard.stats.queryOptions()),
+  ]);
+
+  return (
+    <HydrateClient>
+      <Suspense fallback={<LeaderboardSkeleton />}>
+        <LeaderboardContent />
+      </Suspense>
+    </HydrateClient>
+  );
+}
+```
+
+**Why use `Promise.all`:**
+- Multiple `prefetch()` calls execute sequentially by default
+- `Promise.all` runs all prefetches in parallel, reducing total wait time
+- Especially important when queries are independent and don't depend on each other's results
+
 This pattern:
 - Keeps the server/client boundary clean
 - Allows prefetching in the Server Component
 - Passes the rendered result as a slot into the Client Component
 - Avoids importing `"server-only"` code into `"use client"` files
+- Optimizes performance when multiple queries are needed
 
 ---
 
@@ -129,6 +164,8 @@ This pattern:
 
 | Component | Pattern demonstrated |
 |---|---|
-| `homepage-stats.tsx` | Server Component prefetch + HydrateClient |
+| `homepage-stats.tsx` | Server Component with single query prefetch + HydrateClient |
+| `homepage-leaderboard.tsx` | Server Component with parallel prefetch (Promise.all) + Suspense |
 | `stats-numbers.tsx` | Client Component with useQuery + NumberFlow animation |
-| `home-page-client.tsx` | Client Component accepting server-rendered slot |
+| `leaderboard-content.tsx` | Client Component with useSuspenseQuery |
+| `home-page-client.tsx` | Client Component accepting server-rendered slots |
