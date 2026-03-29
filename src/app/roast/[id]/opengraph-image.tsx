@@ -46,15 +46,6 @@ function withCacheHeaders(response: Response): Response {
   return response;
 }
 
-function buildHardFallbackPngResponse(): Response {
-  return new Response("png", {
-    headers: {
-      "content-type": "image/png",
-      "cache-control": buildRoastOgCacheControlHeader(),
-    },
-  });
-}
-
 async function renderRoastOgImage(model: RoastOgModel): Promise<Response> {
   return new ImageResponse(
     <div
@@ -168,16 +159,6 @@ async function renderErrorFallback(deps: RoastOgRouteDeps): Promise<Response> {
   return withCacheHeaders(response);
 }
 
-async function renderErrorFallbackSafely(
-  deps: RoastOgRouteDeps
-): Promise<Response> {
-  try {
-    return await renderErrorFallback(deps);
-  } catch {
-    return buildHardFallbackPngResponse();
-  }
-}
-
 export async function getRoastOgImageResponse(
   id: string,
   deps: RoastOgRouteDeps = getDefaultDeps()
@@ -204,7 +185,7 @@ export async function getRoastOgImageResponse(
 
     return withCacheHeaders(response);
   } catch {
-    return renderErrorFallbackSafely(deps);
+    return renderErrorFallback(deps);
   }
 }
 
