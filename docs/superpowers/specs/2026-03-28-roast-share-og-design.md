@@ -29,7 +29,7 @@ Out of scope:
 3. Persistence strategy: no file persistence (render response directly)
 4. Cache policy: short cache window
 5. Failure behavior: fallback image that explicitly says something went wrong
-6. Displayed fields: `score`, `verdict`, `language`, `roastQuote` (truncated), no raw code
+6. Displayed fields: `score`, `verdict`, `language`, `linesCount`, `roastQuote` (truncated), no raw code
 7. Visual baseline: Pencil `Screen 4 - OG Image` (`4J5QT`)
 
 ## Current Project Context
@@ -90,6 +90,7 @@ Content rules:
 - Quote is truncated to avoid overflow
 - No raw code block
 - Keep text density low to preserve readability in embed previews
+- Metadata line must include both `language` and `linesCount`
 
 ## Data Flow
 
@@ -115,10 +116,14 @@ Content rules:
 
 Use short-lived cache (option B selected by user).
 
-Target behavior:
-- `Cache-Control` optimized for short freshness
-- CDN-friendly directives (`s-maxage`), optionally `stale-while-revalidate`
-- Preserve low regeneration latency without locking stale content for long periods
+Target behavior (fixed values):
+- `Cache-Control: public, max-age=60, s-maxage=300, stale-while-revalidate=600`
+- This keeps browser cache very short while allowing CDN reuse for 5 minutes
+- Stale-while-revalidate reduces request spikes on popular links
+
+Metadata fallback copy (fixed):
+- `title`: `Roast not found - DevRoast`
+- `description`: `This roast link is invalid or no longer available.`
 
 ## Test Strategy
 
