@@ -16,6 +16,10 @@ describe("toVerdictLabel", () => {
     assert.equal(toVerdictLabel(8), "solid_work");
     assert.equal(toVerdictLabel(9), "clean_code_machine");
   });
+
+  it("maps NaN score to non-best fallback verdict", () => {
+    assert.equal(toVerdictLabel(Number.NaN), "needs_serious_help");
+  });
 });
 
 describe("sanitizeQuote", () => {
@@ -50,6 +54,17 @@ describe("buildRoastOgModel", () => {
     assert.equal(model.verdictLabel, "solid_work");
     assert.equal(model.metadataText, "typescript • 87 lines");
     assert.equal(model.quoteText, `${"y".repeat(120)}...`);
+  });
+
+  it("returns non-empty fallback quote text for whitespace-only input", () => {
+    const model = buildRoastOgModel({
+      score: 7,
+      language: "typescript",
+      linesCount: 87,
+      roastQuote: "   \n\t  ",
+    });
+
+    assert.equal(model.quoteText, "no roast quote available.");
   });
 });
 

@@ -13,6 +13,10 @@ type BuildRoastOgModelInput = {
 };
 
 export function toVerdictLabel(score: number): string {
+  if (!Number.isFinite(score)) {
+    return "needs_serious_help";
+  }
+
   if (score <= 3) {
     return "needs_serious_help";
   }
@@ -50,11 +54,13 @@ export function truncateQuote(value: string | null, maxChars = 120): string {
 }
 
 export function buildRoastOgModel(input: BuildRoastOgModelInput): RoastOgModel {
+  const quoteText = truncateQuote(input.roastQuote);
+
   return {
     scoreText: `${input.score}/10`,
     verdictLabel: toVerdictLabel(input.score),
     metadataText: `${input.language} • ${input.linesCount} lines`,
-    quoteText: truncateQuote(input.roastQuote),
+    quoteText: quoteText || "no roast quote available.",
   };
 }
 
