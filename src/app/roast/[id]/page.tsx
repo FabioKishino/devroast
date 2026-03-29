@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
 import {
@@ -9,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { CodeBlock, CodeBlockHeader } from "@/components/ui/code-block";
 import { DiffLine } from "@/components/ui/diff-line";
 import { ScoreRing } from "@/components/ui/score-ring";
+import { buildRoastMetadata } from "@/server/og/roast-og-metadata";
 import { caller } from "@/trpc/server";
 
 // ── Page ───────────────────────────────────────────────────────────────────────
@@ -24,6 +26,36 @@ const UUID_REGEX =
 
 function isUuid(value: string): boolean {
   return UUID_REGEX.test(value);
+}
+
+function getBaseOrigin(): string {
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+
+  return "http://localhost:3000";
+}
+
+export async function generateMetadata({
+  params,
+}: RoastResultPageProps): Promise<Metadata> {
+  const { id } = await params;
+
+  if (!isUuid(id)) {
+    return buildRoastMetadata({
+      roastId: id,
+      baseOrigin: getBaseOrigin(),
+      roast: null,
+    });
+  }
+
+  const roast = await caller.roast.byId({ id });
+
+  return buildRoastMetadata({
+    roastId: id,
+    baseOrigin: getBaseOrigin(),
+    roast,
+  });
 }
 
 function toVerdict(score: number): {
