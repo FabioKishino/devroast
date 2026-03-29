@@ -188,4 +188,32 @@ describe("roast/[id]/opengraph-image", () => {
     assert.equal(receivedModels.length, 1);
     assert.deepEqual(receivedModels[0], buildRoastOgRenderErrorModel());
   });
+
+  it("repeated renderer failure returns non-throwing minimal PNG response", async () => {
+    let renderAttempts = 0;
+
+    const response = await getRoastOgImageResponse(VALID_ID, {
+      fetchRoastById: async () => ROAST_FIXTURE,
+      renderModel: async () => {
+        renderAttempts += 1;
+        throw new Error("renderer unavailable");
+      },
+    });
+
+    const pngBytes = new Uint8Array(await response.arrayBuffer());
+
+    assert.equal(
+      response.headers.get("content-type")?.includes("image/png"),
+      true
+    );
+    assert.equal(
+      response.headers.get("cache-control"),
+      buildRoastOgCacheControlHeader()
+    );
+    assert.equal(renderAttempts, 2);
+    assert.deepEqual(
+      Array.from(pngBytes.slice(0, 8)),
+      [137, 80, 78, 71, 13, 10, 26, 10]
+    );
+  });
 });

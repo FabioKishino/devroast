@@ -14,6 +14,9 @@ export const size = {
   height: 630,
 };
 
+const MINIMAL_PNG_BASE64 =
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO6f4X8AAAAASUVORK5CYII=";
+
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -44,6 +47,17 @@ function isUuid(value: string): boolean {
 function withCacheHeaders(response: Response): Response {
   response.headers.set("cache-control", buildRoastOgCacheControlHeader());
   return response;
+}
+
+function renderMinimalPngFallback(): Response {
+  const body = Uint8Array.from(Buffer.from(MINIMAL_PNG_BASE64, "base64"));
+
+  return new Response(body, {
+    headers: {
+      "content-type": "image/png",
+      "cache-control": buildRoastOgCacheControlHeader(),
+    },
+  });
 }
 
 async function renderRoastOgImage(model: RoastOgModel): Promise<Response> {
@@ -185,7 +199,11 @@ export async function getRoastOgImageResponse(
 
     return withCacheHeaders(response);
   } catch {
-    return renderErrorFallback(deps);
+    try {
+      return await renderErrorFallback(deps);
+    } catch {
+      return renderMinimalPngFallback();
+    }
   }
 }
 
