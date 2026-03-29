@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import {
   AnalysisCardDescription,
   AnalysisCardRoot,
@@ -29,12 +30,26 @@ function isUuid(value: string): boolean {
 }
 
 function getBaseOrigin(): string {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
+
+  if (appUrl) {
+    return appUrl.replace(/\/+$/, "");
+  }
+
   if (process.env.VERCEL_URL) {
     return `https://${process.env.VERCEL_URL}`;
   }
 
   return "http://localhost:3000";
 }
+
+const getRoastByIdCached = cache(async (id: string) => {
+  if (!isUuid(id)) {
+    return null;
+  }
+
+  return caller.roast.byId({ id });
+});
 
 export async function generateMetadata({
   params,
@@ -49,7 +64,7 @@ export async function generateMetadata({
     });
   }
 
-  const roast = await caller.roast.byId({ id });
+  const roast = await getRoastByIdCached(id);
 
   return buildRoastMetadata({
     roastId: id,
@@ -89,7 +104,7 @@ export default async function RoastResultPage({
     notFound();
   }
 
-  const roast = await caller.roast.byId({ id });
+  const roast = await getRoastByIdCached(id);
 
   if (!roast) {
     notFound();

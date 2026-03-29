@@ -30,8 +30,12 @@ function buildRoastAwareDescription(roast: RoastMetadataRoast): string {
   return `See why this ${roast.language} snippet scored ${roast.score}/10 on DevRoast.`;
 }
 
+function normalizeBaseOrigin(baseOrigin: string): string {
+  return baseOrigin.replace(/\/+$/, "");
+}
+
 function buildRoastOgImageUrl(baseOrigin: string, roastId: string): string {
-  return `${baseOrigin}/roast/${roastId}/opengraph-image`;
+  return `${normalizeBaseOrigin(baseOrigin)}/roast/${roastId}/opengraph-image`;
 }
 
 export function buildRoastMetadata(input: BuildRoastMetadataInput): Metadata {
