@@ -22,11 +22,17 @@ describe("toVerdictLabel", () => {
   });
 
   it("maps Infinity score to non-best fallback verdict", () => {
-    assert.equal(toVerdictLabel(Number.POSITIVE_INFINITY), "needs_serious_help");
+    assert.equal(
+      toVerdictLabel(Number.POSITIVE_INFINITY),
+      "needs_serious_help"
+    );
   });
 
   it("maps -Infinity score to non-best fallback verdict", () => {
-    assert.equal(toVerdictLabel(Number.NEGATIVE_INFINITY), "needs_serious_help");
+    assert.equal(
+      toVerdictLabel(Number.NEGATIVE_INFINITY),
+      "needs_serious_help"
+    );
   });
 });
 

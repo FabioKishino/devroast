@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
-  ROAST_OG_CACHE_MAX_AGE_SECONDS,
-  ROAST_OG_CACHE_STALE_WHILE_REVALIDATE_SECONDS,
-  ROAST_OG_CACHE_S_MAXAGE_SECONDS,
   buildRoastOgCacheControlHeader,
+  ROAST_OG_CACHE_MAX_AGE_SECONDS,
+  ROAST_OG_CACHE_S_MAXAGE_SECONDS,
+  ROAST_OG_CACHE_STALE_WHILE_REVALIDATE_SECONDS,
 } from "./roast-og-cache";
 
 describe("roast OG cache policy", () => {
