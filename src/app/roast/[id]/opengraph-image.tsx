@@ -46,6 +46,15 @@ function withCacheHeaders(response: Response): Response {
   return response;
 }
 
+function buildHardFallbackPngResponse(): Response {
+  return new Response("png", {
+    headers: {
+      "content-type": "image/png",
+      "cache-control": buildRoastOgCacheControlHeader(),
+    },
+  });
+}
+
 async function renderRoastOgImage(model: RoastOgModel): Promise<Response> {
   return new ImageResponse(
     <div
@@ -159,19 +168,29 @@ async function renderErrorFallback(deps: RoastOgRouteDeps): Promise<Response> {
   return withCacheHeaders(response);
 }
 
+async function renderErrorFallbackSafely(
+  deps: RoastOgRouteDeps
+): Promise<Response> {
+  try {
+    return await renderErrorFallback(deps);
+  } catch {
+    return buildHardFallbackPngResponse();
+  }
+}
+
 export async function getRoastOgImageResponse(
   id: string,
   deps: RoastOgRouteDeps = getDefaultDeps()
 ): Promise<Response> {
-  if (!isUuid(id)) {
-    return renderNotFoundFallback(deps);
-  }
-
   try {
+    if (!isUuid(id)) {
+      return await renderNotFoundFallback(deps);
+    }
+
     const roast = await deps.fetchRoastById(id);
 
     if (!roast) {
-      return renderNotFoundFallback(deps);
+      return await renderNotFoundFallback(deps);
     }
 
     const model = buildRoastOgModel({
@@ -185,7 +204,7 @@ export async function getRoastOgImageResponse(
 
     return withCacheHeaders(response);
   } catch {
-    return renderErrorFallback(deps);
+    return renderErrorFallbackSafely(deps);
   }
 }
 

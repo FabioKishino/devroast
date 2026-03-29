@@ -112,4 +112,38 @@ describe("roast/[id]/opengraph-image", () => {
     );
     assert.equal(renderAttempts, 2);
   });
+
+  it("not-found fallback render failure resolves to render-error fallback PNG", async () => {
+    let renderAttempts = 0;
+
+    const response = await getRoastOgImageResponse("not-a-uuid", {
+      fetchRoastById: async () => {
+        throw new Error("must not fetch for invalid id");
+      },
+      renderModel: async () => {
+        renderAttempts += 1;
+
+        if (renderAttempts === 1) {
+          throw new Error("not-found renderer exploded");
+        }
+
+        return new Response("png", {
+          headers: {
+            "content-type": "image/png",
+            "cache-control": buildRoastOgCacheControlHeader(),
+          },
+        });
+      },
+    });
+
+    assert.equal(
+      response.headers.get("content-type")?.includes("image/png"),
+      true
+    );
+    assert.equal(
+      response.headers.get("cache-control"),
+      buildRoastOgCacheControlHeader()
+    );
+    assert.equal(renderAttempts, 2);
+  });
 });
