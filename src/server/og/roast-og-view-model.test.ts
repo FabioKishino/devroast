@@ -20,6 +20,14 @@ describe("toVerdictLabel", () => {
   it("maps NaN score to non-best fallback verdict", () => {
     assert.equal(toVerdictLabel(Number.NaN), "needs_serious_help");
   });
+
+  it("maps Infinity score to non-best fallback verdict", () => {
+    assert.equal(toVerdictLabel(Number.POSITIVE_INFINITY), "needs_serious_help");
+  });
+
+  it("maps -Infinity score to non-best fallback verdict", () => {
+    assert.equal(toVerdictLabel(Number.NEGATIVE_INFINITY), "needs_serious_help");
+  });
 });
 
 describe("sanitizeQuote", () => {
@@ -62,6 +70,17 @@ describe("buildRoastOgModel", () => {
       language: "typescript",
       linesCount: 87,
       roastQuote: "   \n\t  ",
+    });
+
+    assert.equal(model.quoteText, "no roast quote available.");
+  });
+
+  it("returns non-empty fallback quote text for null quote", () => {
+    const model = buildRoastOgModel({
+      score: 7,
+      language: "typescript",
+      linesCount: 87,
+      roastQuote: null,
     });
 
     assert.equal(model.quoteText, "no roast quote available.");
